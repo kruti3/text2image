@@ -1,16 +1,14 @@
 import gensim
 import numpy as np
-import os
-cwd = os.getcwd()
 #model = gensim.models.KeyedVectors.load_word2vec_format('/home/utkarsh1404/Documents/CS682/Project/dataset/GoogleNews-vectors-negative300.bin', binary=True)
 
 #print model['tree']
 #print model['Tree']
 #print model['and']
 
-train = np.load(cwd+'/../../../flickr30k_images/img_to_caption_train.npy').item()
-validate = np.load(cwd+'/../../../flickr30k_images/img_to_caption_validate.npy').item()
-test = np.load(cwd+'/../../../flickr30k_images/img_to_caption_test.npy').item()
+train = np.load('/home/utkarsh1404/project/text2image/img_to_caption_train.npy').item()
+validate = np.load('/home/utkarsh1404/project/text2image/img_to_caption_validate.npy').item()
+test = np.load('/home/utkarsh1404/project/text2image/img_to_caption_test.npy').item()
 
 
 from nltk.tokenize import sent_tokenize, word_tokenize
