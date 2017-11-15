@@ -69,7 +69,6 @@ print maxLen
 print sent
 
 
-import numpy as np
 train_vec = {}
 validate_vec = {}
 test_vec = {}
@@ -129,3 +128,5 @@ for key in final_test:
 np.save('system_input_train.npy', train_vec)
 np.save('system_input_validate.npy', validate_vec)
 np.save('system_input_test.npy', test_vec)
+
+print validate_vec
