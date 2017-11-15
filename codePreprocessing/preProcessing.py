@@ -1,6 +1,6 @@
 import gensim
 import numpy as np
-#model = gensim.models.KeyedVectors.load_word2vec_format('/home/utkarsh1404/Documents/CS682/Project/dataset/GoogleNews-vectors-negative300.bin', binary=True)
+model = gensim.models.KeyedVectors.load_word2vec_format('/home/utkarsh1404/project/text2image/GoogleNews-vectors-negative300.bin', binary=True)
 
 #print model['tree']
 #print model['Tree']
@@ -21,6 +21,11 @@ nltk.download('punkt')
  
 stopWords = set(stopwords.words('english'))
 
+
+final_train = {}
+final_validate = {}
+final_test = {}
+
 maxLen = -1
 sent = []
 for key in train:
@@ -30,7 +35,7 @@ for key in train:
     for w in words:
         if w not in stopWords and w not in string.punctuation:
             wordsFiltered.append(w)
- 
+    final_train[key] = wordsFiltered
     currlen = len(wordsFiltered)
     if currlen > maxLen:
         maxLen = currlen
@@ -42,7 +47,7 @@ for key in validate:
     for w in words:
         if w not in stopWords and w not in string.punctuation:
             wordsFiltered.append(w)
- 
+    final_validate[key] = wordsFiltered
     currlen = len(wordsFiltered)
     if currlen > maxLen:
         maxLen = currlen
@@ -54,7 +59,7 @@ for key in test:
     for w in words:
         if w not in stopWords and w not in string.punctuation:
             wordsFiltered.append(w)
- 
+    final_test[key] = wordsFiltered
     currlen = len(wordsFiltered)
     if currlen > maxLen:
         maxLen = currlen
@@ -62,3 +67,65 @@ for key in test:
 
 print maxLen
 print sent
+
+
+import numpy as np
+train_vec = {}
+validate_vec = {}
+test_vec = {}
+
+for key in final_train:
+    currArray = np.zeros((11,300))
+    words = final_train[key]
+    counter = 0
+    for word in words:
+        upperWord = word[0].upper() + word[1:]
+        if word in model:
+            vec = model[word]
+            for i in range(0,300):
+                currArray[counter][i] = vec[i]
+        elif upperWord in model:
+            vec = model[upperWord]
+            for i in range(0,300):
+                currArray[counter][i] = vec[i]
+        counter+=1
+    train_vec[key] = currArray   
+
+for key in final_validate:
+    currArray = np.zeros((11,300))
+    words = final_validate[key]
+    counter = 0
+    for word in words:
+        upperWord = word[0].upper() + word[1:]
+        if word in model:
+            vec = model[word]
+            for i in range(0,300):
+                currArray[counter][i] = vec[i]
+        elif upperWord in model:
+            vec = model[upperWord]
+            for i in range(0,300):
+                currArray[counter][i] = vec[i]
+        counter+=1
+    validate_vec[key] = currArray   
+
+for key in final_test:
+    currArray = np.zeros((11,300))
+    words = final_test[key]
+    counter = 0
+    for word in words:
+        upperWord = word[0].upper() + word[1:]
+        if word in model:
+            vec = model[word]
+            for i in range(0,300):
+                currArray[counter][i] = vec[i]
+        elif upperWord in model:
+            vec = model[upperWord]
+            for i in range(0,300):
+                currArray[counter][i] = vec[i]
+        counter+=1
+    test_vec[key] = currArray   
+
+
+np.save('system_input_train.npy', train_vec)
+np.save('system_input_validate.npy', validate_vec)
+np.save('system_input_test.npy', test_vec)
