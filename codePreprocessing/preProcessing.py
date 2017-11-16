@@ -130,3 +130,4 @@ np.save('system_input_validate.npy', validate_vec)
 np.save('system_input_test.npy', test_vec)
 
 print validate_vec
+
