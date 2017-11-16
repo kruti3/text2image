@@ -3,6 +3,7 @@ import theano
 import theano.tensor as T
 import lasagne
 import matplotlib.pyplot as plt
+from PIL import Image
 
 from data_utils import *
 
@@ -80,10 +81,10 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 3, stride=1, pad=1, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 15, 3, stride=1, pad=1, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 22, 3, stride=1, pad=1, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 18, 3, stride=1, pad=1, nonlinearity=lrelu))
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 15*64*64))
+    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 18*64*64))
 
 
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
@@ -115,10 +116,10 @@ def gen_model(input_noise, input_text):
     second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 10000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 18*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 18, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 20, 3, stride=1, pad=1, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 22, 3, stride=1, pad=1, nonlinearity=lrelu))
     second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, pad=1, nonlinearity=lrelu)
     return second_conv_layer
 
@@ -196,12 +197,10 @@ def train_network():
         if epoch==num_epochs-1:
             curr_noise = np.random.rand(X_test_img.shape[0], 200)
             test_samples = test_gen_fn_samples(curr_noise, X_test_caption)
-            #plt.imsave('mnist_samples.png',
-            #           (samples.reshape(6, 7, 28, 28)
-            #                   .transpose(0, 2, 1, 3)
-            #                   .reshape(6*28, 7*28)),
-            #           cmap='gray')
-            # TODO : save all test images - with id
+            for x in range(test_samples.shape[0]):
+                c, w, h = test_samples[x].shape
+                im = Image.fromarray(np.reshape(test_samples[x],(w, h, c)))
+                im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]+".jpeg")
 
 
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()

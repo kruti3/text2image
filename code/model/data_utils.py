@@ -1,9 +1,6 @@
-import array 
-import cPickle as pickle
 import numpy as np
 import os
 from PIL import Image
-from array import *
 
 def imgtobin():
     
