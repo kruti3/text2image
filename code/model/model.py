@@ -23,9 +23,9 @@ def load_dataset():
 
     print test_img_raw
     
-    train_caption = np.load('/home/utkarsh1404/Documents/CS682/Project/dataset/gitcode/text2image/data/system_input_train.npy').item()
-    validate_caption = np.load('/home/utkarsh1404/Documents/CS682/Project/dataset/gitcode/text2image/data/system_input_validate.npy').item()
-    test_caption = np.load('/home/utkarsh1404/Documents/CS682/Project/dataset/gitcode/text2image/data/system_input_test.npy').item()
+    train_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_train.npy').item()
+    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_validate.npy').item()
+    test_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 11 , 300))
