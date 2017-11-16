@@ -141,7 +141,7 @@ def train_network():
 
     all_layers = lasagne.layers.get_all_layers(disc)
     print all_layers
-    fake_img_val = lasagne.layers.get_output(disc, {'a': lasagne.layers.get_output(gen), 'b': input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[9]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
