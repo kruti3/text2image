@@ -172,10 +172,10 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'))
 
-    num_epochs = 1#15
-    batch_size = 10#200
-    iter_per_epoch = 1#X_train_img.shape[0]/batch_size
-    num_iters_inner = 1#3
+    num_epochs = 4
+    batch_size = 200
+    iter_per_epoch = X_train_img.shape[0]/batch_size
+    num_iters_inner = 3
     count = 0
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
@@ -189,7 +189,7 @@ def train_network():
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
             noise = np.random.rand(batch_size, 200)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
-            if count%10==0:
+            if count%100==0:
                 print "Iters done : (", count, "/", (iter_per_epoch*num_epochs), ")"
             count += 1
         train_disc_acc /= (1.0 * num_iters_inner * iter_per_epoch)
@@ -197,6 +197,7 @@ def train_network():
         print "Epoch done : (", (epoch+1), "/", num_epochs, ")"
         print "Train_disc_acc_avg = ", train_disc_acc
         print "Train_gen_acc_avg = ", train_gen_acc
+        
         curr_noise = np.random.rand(X_train_img.shape[0], 200)
         print "Current_disc_acc = ", test_disc_fn(X_train_img, curr_noise, X_train_caption)
         print "Current_gen_acc = ", test_gen_fn(curr_noise, X_train_caption)
