@@ -83,10 +83,10 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 3, stride=1, pad=1, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 15, 3, stride=1, pad=1, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 10, 3, stride=1, pad=1, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 5, 3, stride=1, pad=1, nonlinearity=lrelu))
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 15*64*64))
+    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 5*64*64))
 
 
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
@@ -118,10 +118,10 @@ def gen_model(input_noise, input_text):
     second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 5000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 5*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 5, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 20, 3, stride=1, crop=1, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 10, 3, stride=1, crop=1, nonlinearity=lrelu))
     second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, crop=1, nonlinearity=lrelu)
     return second_conv_layer
 
