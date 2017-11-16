@@ -129,9 +129,9 @@ def gen_model(input_noise, input_text):
 
 def train_network():
     
-    input_noise = T.dmatrix()
-    input_image = T.dtensor4()
-    input_text = T.dtensor3()
+    input_noise = T.fmatrix()
+    input_image = T.ftensor4()
+    input_text = T.ftensor3()
 
     gen = gen_model(input_noise, input_text)
     disc = disc_model(input_image, input_text)
