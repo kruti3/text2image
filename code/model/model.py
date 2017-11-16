@@ -172,10 +172,10 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'))
 
-    num_epochs = 1
-    batch_size = 200
+    num_epochs = 1#15
+    batch_size = 10#200
     iter_per_epoch = 1#X_train_img.shape[0]/batch_size
-    num_iters_inner = 2
+    num_iters_inner = 1#3
     count = 0
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
@@ -209,7 +209,7 @@ def train_network():
                 c, w, h = arr.shape
                 arr = np.reshape(arr, (w, h, c))
                 arr = np.asarray(arr)
-                im = Image.fromarray(np.unit8(arr))
+                im = Image.fromarray(np.uint8(arr))
                 im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]+".jpg")
 
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
