@@ -130,16 +130,23 @@ def gen_model(input_noise, input_text):
 def train_network():
     print "Start Training!"    
 
-    input_noise = T.fmatrix()
-    input_image = T.ftensor4()
-    input_text = T.ftensor3()
+    input_noise = T.fmatrix('n')
+    input_image = T.ftensor4('i')
+    input_text = T.ftensor3('t')
 
     gen = gen_model(input_noise, input_text)
     disc = disc_model(input_image, input_text)
 
     real_img_val = lasagne.layers.get_output(disc)
-    disc2 = disc_model(lasagne.layers.get_output(gen), input_text)
-    fake_img_val = lasagne.layers.get_output(disc2)
+
+    #
+    Xin = T.fensor4( 'i' )
+    Xin2 = T.ftensor3( 't' )
+    X = {disc['i']:Xin, disc['t']:Xin2 }
+    netOut = lasagne.layers.get_output( disc.layers_[ layerName ], inputs = X)
+    get_activation = theano.function( [ Xin, Xin2 ], netOut, on_unused_input = 'warn' )
+    fake_img_val = get_activation(lasagne.layers.get_output(gen), input_text)
+    #
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
