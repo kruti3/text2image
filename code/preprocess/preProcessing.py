@@ -1,6 +1,6 @@
 import gensim
 import numpy as np
-model = gensim.models.KeyedVectors.load_word2vec_format('../../../../../GoogleNews-vectors-negative300.bin', binary=True)
+model = gensim.models.KeyedVectors.load_word2vec_format('../../GoogleNews-vectors-negative300.bin', binary=True)
 
 #print model['tree']
 #print model['Tree']
