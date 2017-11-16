@@ -7,10 +7,12 @@ from PIL import Image
 
 from data_utils import *
 
-from lasagne.layers import *
+from lasagne.layers import Conv2DLayer, InputLayer, ReshapeLayer, DropoutLayer, DenseLayer, Deconv2DLayer, MaxPool2DLayer, get_output
 from lasagne.nonlinearities import *
 
 from random import randint
+
+import lasagne
 
 
 imageIdToNameDict = {}
