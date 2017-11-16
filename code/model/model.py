@@ -71,7 +71,7 @@ def get_sampled_batch_for_training(imgs, captions, batch_size):
     lst = []
     size = imgs.shape[0]
     while len(lst)!=batch_size:
-        randNum = randint(0, size)
+        randNum = randint(0, size-1)
         if randNum not in lst:
             lst.append(randNum)
 
@@ -83,10 +83,10 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 10, 3, stride=1, pad=1, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 5, 3, stride=1, pad=1, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 3, stride=1, pad=1, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 15, 3, stride=1, pad=1, nonlinearity=lrelu))
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 5*64*64))
+    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 15*64*64))
 
 
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
@@ -95,7 +95,7 @@ def disc_model(input_img, input_text):
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
     frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 5000, nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.35)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 1000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
     final_output_dis = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
 
@@ -112,16 +112,16 @@ def gen_model(input_noise, input_text):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    first_hidden_layer = batch_norm(DenseLayer(input_gen, 1000, nonlinearity=lrelu))
+    first_hidden_layer = batch_norm(DenseLayer(input_gen, 2000, nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
 
     second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 5000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 5*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 5, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 10, 3, stride=1, crop=1, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 20, 3, stride=1, crop=1, nonlinearity=lrelu))
     second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, crop=1, nonlinearity=lrelu)
     return second_conv_layer
 
@@ -177,6 +177,7 @@ def train_network():
     iter_per_epoch = X_train_img.shape[0]/batch_size
     num_iters_inner = 3
     count = 0
+    print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
         train_disc_acc = 0.0
         train_gen_acc = 0.0
