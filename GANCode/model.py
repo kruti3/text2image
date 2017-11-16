@@ -30,3 +30,19 @@ second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
 final_output_dis = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
 
 
+# Generator model
+lrelu = LeakyRectify(0.1)
+
+input_gen = InputLayer(shape=(None, 3500), input_var=input_text_var)
+
+first_hidden_layer = batch_norm(DenseLayer(input_gen, 5000, nonlinearity=lrelu))
+first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.35)
+
+second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 10000, nonlinearity=lrelu))
+second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
+
+third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
+third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
+
+first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 15, 3, stride=1, pad=1, nonlinearity=lrelu))
+second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 20, 3, stride=1, pad=1, nonlinearity=lrelu))
