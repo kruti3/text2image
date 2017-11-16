@@ -165,9 +165,9 @@ def train_network():
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) > .5).mean(),
-                                (lasagne.layers.get_output(disc, {input_img : lasagne.layers.get_output(gen, deterministic=True), input_text : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[9] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {input_img : lasagne.layers.get_output(gen, deterministic=True), input_text : input_text}, deterministic=True) > .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[9] : input_text}, deterministic=True) > .5).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
