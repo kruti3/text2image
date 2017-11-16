@@ -21,7 +21,7 @@ X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_capti
 def load_dataset():
     train_img_raw, val_img_raw, test_img_raw = imgtobin()
 
-    print test_img_raw
+    #print test_img_raw
     
     train_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_train.npy').item()
     validate_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_validate.npy').item()
@@ -121,14 +121,15 @@ def gen_model(input_noise, input_text):
     third_hidden_layer = DenseLayer(second_hidden_layer, 18*128*128, nonlinearity=lrelu)
     third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 18, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 22, 3, stride=1, pad=1, nonlinearity=lrelu))
-    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, pad=1, nonlinearity=lrelu)
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 22, 3, stride=1, crop=1, nonlinearity=lrelu))
+    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, crop=1, nonlinearity=lrelu)
     return second_conv_layer
 
 
 
 def train_network():
-    
+    print "Start Training!"    
+
     input_noise = T.fmatrix()
     input_image = T.ftensor4()
     input_text = T.ftensor3()
@@ -184,9 +185,9 @@ def train_network():
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
             noise = np.random.rand(batch_size, 200)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
-            count += 1
             if count%100==0:
                 print "Iters done : (", count, "/", (iter_per_epoch*num_epochs), ")"
+            count += 1
         train_disc_acc /= (1.0 * num_iters_inner * iter_per_epoch)
         train_gen_acc /= (1.0 * iter_per_epoch) 
         print "Epoch done : (", (epoch+1), "/", num_epochs, ")"
