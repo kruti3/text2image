@@ -36,6 +36,7 @@ for key in train:
         if w not in stopWords and w not in string.punctuation:
             wordsFiltered.append(w)
     final_train[key] = wordsFiltered
+ 
     currlen = len(wordsFiltered)
     if currlen > maxLen:
         maxLen = currlen
@@ -130,4 +131,3 @@ np.save('system_input_validate.npy', validate_vec)
 np.save('system_input_test.npy', test_vec)
 
 print validate_vec
-
