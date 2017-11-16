@@ -140,7 +140,7 @@ def train_network():
     real_img_val = lasagne.layers.get_output(disc)
 
     all_layers = lasagne.layers.get_all_layers(disc)
-    print all_layers
+    #print all_layers
     fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[9]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
@@ -172,7 +172,7 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 20
+    num_epochs = 1
     batch_size = 200
     iter_per_epoch = X_train_img.shape[0]/batch_size
     num_iters_inner = 3
@@ -180,8 +180,8 @@ def train_network():
     for epoch in range(num_epochs):
         train_disc_acc = 0.0
         train_gen_acc = 0.0
-        for itern in iter_per_epoch:
-            for inner_itern in num_iters_inner:
+        for itern in range(iter_per_epoch):
+            for inner_itern in range(num_iters_inner):
                 imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
                 noise = np.random.rand(batch_size, 200)
                 train_disc_acc += np.array(train_disc_fn(imgs, noise, caption))
