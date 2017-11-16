@@ -141,7 +141,7 @@ def train_network():
 
     all_layers = lasagne.layers.get_all_layers(disc)
     #print all_layers
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: np.uint8(np.array(lasagne.layers.get_output(gen))), all_layers[9]: input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen, dtype = 'int8'), all_layers[9]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
@@ -165,16 +165,16 @@ def train_network():
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : np.uint8(lasagne.layers.get_output(gen, deterministic=True)), all_layers[9] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'), all_layers[9] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : np.uint8(lasagne.layers.get_output(gen, deterministic=True)), all_layers[9] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'), all_layers[9] : input_text}, deterministic=True) >= .5).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
-                                np.uint8(lasagne.layers.get_output(gen, deterministic=True)))
+                                lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'))
 
     num_epochs = 1
     batch_size = 200
-    iter_per_epoch = X_train_img.shape[0]/batch_size
+    iter_per_epoch = 1#X_train_img.shape[0]/batch_size
     num_iters_inner = 2
     count = 0
     print "Set-up system! Starting epochs!"
@@ -209,7 +209,7 @@ def train_network():
                 c, w, h = arr.shape
                 arr = np.reshape(arr, (w, h, c))
                 arr = np.asarray(arr)
-                im = Image.fromarray(arr)
+                im = Image.fromarray(np.unit8(arr))
                 im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]+".jpg")
 
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
