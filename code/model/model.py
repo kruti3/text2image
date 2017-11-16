@@ -139,14 +139,8 @@ def train_network():
 
     real_img_val = lasagne.layers.get_output(disc)
 
-    #
-    Xin = T.ftensor4( 'i' )
-    Xin2 = T.ftensor3( 't' )
-    X = {disc['i']:Xin, disc['t']:Xin2 }
-    netOut = lasagne.layers.get_output( disc.layers_[ layerName ], inputs = X)
-    get_activation = theano.function( [ Xin, Xin2 ], netOut, on_unused_input = 'warn' )
-    fake_img_val = get_activation(lasagne.layers.get_output(gen), input_text)
-    #
+    dummy_fn = theano.function([input_image, input_text], lasagne.layers.get_output(disc))
+    fake_img_val = dummy_fn(lasagne.layers.get_output(gen), input_text)
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
