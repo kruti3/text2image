@@ -150,8 +150,8 @@ np.save('img_to_caption_test.npy', test)
 
 
 import Image
-width = 256
-height = 256
+width = 128
+height = 128
 files = glob.iglob(os.path.join("/home/utkarsh1404/Documents/CS682/Project/dataset/flickr30k_images/samples/train/", "*.jpg"))
 for file in files:
     fileName = file.split("/")[10]

@@ -11,8 +11,7 @@ def imgtobin():
     for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
-                im = Image.open(os.path.join(dirname, filename))
-                pix = im.load()
+                pix = Image.open(os.path.join(dirname, filename))
                 pix = np.array(pix)
                 #print(os.path.join(dirname, filename))
 
@@ -24,8 +23,7 @@ def imgtobin():
     for dirname, dirnames, filenames in os.walk('../../data/samplesResized/validate'):
         for filename in filenames:
             if filename.endswith('.jpg'):
-                im = Image.open(os.path.join(dirname, filename))
-                pix = im.load()
+                pix = Image.open(os.path.join(dirname, filename))
                 pix = np.array(pix)
                 #print(os.path.join(dirname, filename))
 
@@ -37,8 +35,7 @@ def imgtobin():
     for dirname, dirnames, filenames in os.walk('../../data/samplesResized/test'):
         for filename in filenames:
             if filename.endswith('.jpg'):
-                im = Image.open(os.path.join(dirname, filename))
-                pix = im.load()
+                pix = Image.open(os.path.join(dirname, filename))
                 pix = np.array(pix)
                 #print(os.path.join(dirname, filename))
 
@@ -46,4 +43,6 @@ def imgtobin():
                 pix = np.reshape(pix, (c, w, h))
 
                 test_dict[filename] = pix
+
+    return train_dict, val_dict, test_dict
 

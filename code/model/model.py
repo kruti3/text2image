@@ -7,12 +7,10 @@ from PIL import Image
 
 from data_utils import *
 
-from lasagne.layers import Conv2DLayer, InputLayer, ReshapeLayer, DropoutLayer, DenseLayer, Deconv2DLayer, MaxPool2DLayer, get_output
+from lasagne.layers import *
 from lasagne.nonlinearities import *
 
 from random import randint
-
-import lasagne
 
 
 imageIdToNameDict = {}
@@ -22,10 +20,12 @@ X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_capti
 
 def load_dataset():
     train_img_raw, val_img_raw, test_img_raw = imgtobin()
+
+    print test_img_raw
     
-    train_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_train.npy').items()
-    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_validate.npy').items()
-    test_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_test.npy').items()
+    train_caption = np.load('/home/utkarsh1404/Documents/CS682/Project/dataset/gitcode/text2image/data/system_input_train.npy').item()
+    validate_caption = np.load('/home/utkarsh1404/Documents/CS682/Project/dataset/gitcode/text2image/data/system_input_validate.npy').item()
+    test_caption = np.load('/home/utkarsh1404/Documents/CS682/Project/dataset/gitcode/text2image/data/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 11 , 300))
@@ -202,7 +202,7 @@ def train_network():
             for x in range(test_samples.shape[0]):
                 c, w, h = test_samples[x].shape
                 im = Image.fromarray(np.reshape(test_samples[x],(w, h, c)))
-                im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]+".jpeg")
+                im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]+".jpg")
 
 
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
