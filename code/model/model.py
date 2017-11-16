@@ -79,29 +79,10 @@ def get_sampled_batch_for_training(imgs, captions, batch_size):
 
 
 def disc_model(input_img, input_text):
-    
-    pass
-
-
-def gen_model(input_noise, input_text):
-    # Generator model
-    pass
-
-
-
-def train_network():
-    print "Start Training!"    
-
-    input_noise = T.fmatrix()
-    input_image = T.ftensor4()
-    input_text = T.ftensor3()
-
-    #gen = gen_model(input_noise, input_text)
-    #disc = disc_model(input_image, input_text)
     # disc layer description
     lrelu = LeakyRectify(0.1)
 
-    input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_image)
+    input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
     frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 10, 3, stride=1, pad=1, nonlinearity=lrelu))
     second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 5, 3, stride=1, pad=1, nonlinearity=lrelu))
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
@@ -116,7 +97,14 @@ def train_network():
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.35)
     second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 1000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
-    disc = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
+    final_output_dis = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
+
+    return final_output_dis
+
+
+def gen_model(input_noise, input_text):
+    # Generator model
+    lrelu = LeakyRectify(0.1)
 
     input_gen_noise = InputLayer(shape=(None, 200), input_var=input_noise)
     input_gen_text = InputLayer(shape=(None, 11, 300), input_var=input_text)
@@ -134,8 +122,20 @@ def train_network():
     third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 5, 128, 128))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 10, 3, stride=1, crop=1, nonlinearity=lrelu))
-    gen = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, crop=1, nonlinearity=lrelu)
+    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, crop=1, nonlinearity=lrelu)
+    return second_conv_layer
 
+
+
+def train_network():
+    print "Start Training!"    
+
+    input_noise = T.fmatrix()
+    input_image = T.ftensor4()
+    input_text = T.ftensor3()
+
+    gen = gen_model(input_noise, input_text)
+    disc = disc_model(input_image, input_text)
 
     real_img_val = lasagne.layers.get_output(disc)
     fake_img_val = lasagne.layers.get_output(disc, {input_dis : lasagne.layers.get_output(gen), text_input_dis : InputLayer(shape = (None, 11, 300), input_var = input_text)})
