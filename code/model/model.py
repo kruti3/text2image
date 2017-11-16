@@ -78,9 +78,10 @@ def get_sampled_batch_for_training(imgs, captions, batch_size):
     return imgs[lst], captions[lst]
 
 
-def disc_model(input_img, input_text):
+def disc_model(tuple_val):
     # disc layer description
     lrelu = LeakyRectify(0.1)
+    input_img, input_text = tuple_val[0], tuple_val[1]
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
     frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 10, 3, stride=1, pad=1, nonlinearity=lrelu))
@@ -133,12 +134,13 @@ def train_network():
     input_noise = T.dmatrix('n')
     input_image = T.dtensor4('i')
     input_text = T.dtensor3('t')
+    tuple_val = (input_image, input_text)    
 
     gen = gen_model(input_noise, input_text)
-    disc = disc_model(input_image, input_text)
+    disc = disc_model(tuple_val)
 
     real_img_val = lasagne.layers.get_output(disc)
-    fake_img_val = lasagne.layers.get_output(disc).eval({disc["i"] : lasagne.layers.get_output(gen), disc["t"] : input_text})
+    fake_img_val = lasagne.layers.get_output(disc, (lasagne.layers.get_output(gen), input_text))
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
