@@ -64,7 +64,7 @@ def load_dataset():
         global_ctr+=1
 
     
-    return X_train_img_lcl, X_train_caption_lcl, X_val_img_lcl, X_val_caption_lcl, X_test_img_lcl, X_test_val_lcl
+    return X_train_img_lcl, X_train_caption_lcl, X_val_img_lcl, X_val_caption_lcl, X_test_img_lcl, X_test_caption_lcl
 
 
 def get_sampled_batch_for_training(imgs, captions, batch_size):
