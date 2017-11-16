@@ -140,7 +140,7 @@ def train_network():
     real_img_val = lasagne.layers.get_output(disc)
 
     #
-    Xin = T.fensor4( 'i' )
+    Xin = T.ftensor4( 'i' )
     Xin2 = T.ftensor3( 't' )
     X = {disc['i']:Xin, disc['t']:Xin2 }
     netOut = lasagne.layers.get_output( disc.layers_[ layerName ], inputs = X)
