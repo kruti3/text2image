@@ -4,8 +4,12 @@ import theano.tensor as T
 import lasagne
 import matplotlib.pyplot as plt
 
+from data_utils import *
+
 from lasagne.layers import *
 from lasagne.nonlinearities import *
+
+from random import randint
 
 
 imageIdToNameDict = {}
@@ -14,12 +18,61 @@ X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_capti
 
 
 def load_dataset():
-    pass
-
-
-def get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size, shuffle=True):
-    pass
+    train_img_raw, val_img_raw, test_img_raw = imgtobin()
     
+    train_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_train.npy').items()
+    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_validate.npy').items()
+    test_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_test.npy').items()
+
+    train_sz = len(train_caption)
+    X_train_caption_lcl = np.zeros((train_sz, 11 , 300))
+    X_train_img_lcl = np.zeros((train_sz, 3 , 128, 128))
+    validate_sz = len(validate_caption)
+    X_val_caption_lcl = np.zeros((validate_sz, 11 , 300))
+    X_val_img_lcl = np.zeros((validate_sz, 3 , 128, 128))
+    test_sz = len(test_caption)
+    X_test_caption_lcl = np.zeros((test_sz, 11 , 300))
+    X_test_img_lcl = np.zeros((test_sz, 3 , 128, 128))
+    
+    globl_ctr = 0
+    counter = 0
+    for key in train_caption:
+        imageIdToNameDict[globl_ctr] = key
+        imageIdToCaptionVectorDict[globl_ctr] = train_caption[key]
+        X_train_caption_lcl[counter] = train_caption[key]
+        X_train_img_lcl[counter] = train_img_raw[key]
+        counter+=1
+        global_ctr+=1
+    counter = 0
+    for key in validate_caption:
+        imageIdToNameDict[globl_ctr] = key
+        imageIdToCaptionVectorDict[globl_ctr] = validate_caption[key]
+        X_val_caption_lcl[counter] = validate_caption[key]
+        X_val_img_lcl[counter] = val_img_raw[key]
+        counter+=1
+        global_ctr+=1
+    counter = 0
+    for key in test_caption:
+        imageIdToNameDict[globl_ctr] = key
+        imageIdToCaptionVectorDict[globl_ctr] = test_caption[key]
+        X_test_caption_lcl[counter] = test_caption[key]
+        X_test_img_lcl[counter] = test_img_raw[key]
+        counter+=1
+        global_ctr+=1
+
+    
+    return X_train_img_lcl, X_train_caption_lcl, X_val_img_lcl, X_val_caption_lcl, X_test_img_lcl, X_test_val_lcl
+
+
+def get_sampled_batch_for_training(imgs, captions, batch_size):
+    lst = []
+    size = imgs.shape[0]
+    while len(lst)!=batch_size:
+        randNum = randint(0, size)
+        if randNum not in lst:
+            lst.append(randNum)
+
+    return imgs[lst], captions[lst]
 
 
 def disc_model(input_img, input_text):
@@ -112,7 +165,7 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 7
+    num_epochs = 20
     batch_size = 200
     iter_per_epoch = X_train_img.shape[0]/batch_size
     num_iters_inner = 3
@@ -122,10 +175,10 @@ def train_network():
         train_gen_acc = 0.0
         for itern in iter_per_epoch:
             for inner_itern in num_iters_inner:
-                imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size, shuffle=True)
+                imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
                 noise = np.random.rand(batch_size, 200)
                 train_disc_acc += np.array(train_disc_fn(imgs, noise, caption))
-            imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size, shuffle=True)
+            imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
             noise = np.random.rand(batch_size, 200)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
             count += 1
