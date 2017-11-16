@@ -37,27 +37,27 @@ def load_dataset():
     X_test_caption_lcl = np.zeros((test_sz, 11 , 300))
     X_test_img_lcl = np.zeros((test_sz, 3 , 128, 128))
     
-    globl_ctr = 0
+    global_ctr = 0
     counter = 0
     for key in train_caption:
-        imageIdToNameDict[globl_ctr] = key
-        imageIdToCaptionVectorDict[globl_ctr] = train_caption[key]
+        imageIdToNameDict[global_ctr] = key
+        imageIdToCaptionVectorDict[global_ctr] = train_caption[key]
         X_train_caption_lcl[counter] = train_caption[key]
         X_train_img_lcl[counter] = train_img_raw[key]
         counter+=1
         global_ctr+=1
     counter = 0
     for key in validate_caption:
-        imageIdToNameDict[globl_ctr] = key
-        imageIdToCaptionVectorDict[globl_ctr] = validate_caption[key]
+        imageIdToNameDict[global_ctr] = key
+        imageIdToCaptionVectorDict[global_ctr] = validate_caption[key]
         X_val_caption_lcl[counter] = validate_caption[key]
         X_val_img_lcl[counter] = val_img_raw[key]
         counter+=1
         global_ctr+=1
     counter = 0
     for key in test_caption:
-        imageIdToNameDict[globl_ctr] = key
-        imageIdToCaptionVectorDict[globl_ctr] = test_caption[key]
+        imageIdToNameDict[global_ctr] = key
+        imageIdToCaptionVectorDict[global_ctr] = test_caption[key]
         X_test_caption_lcl[counter] = test_caption[key]
         X_test_img_lcl[counter] = test_img_raw[key]
         counter+=1
