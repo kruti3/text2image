@@ -83,19 +83,19 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 13, 5, stride=1, pad=2, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 17, 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 11, 5, stride=1, pad=2, nonlinearity=lrelu))
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 13*64*64))
+    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 11*64*64))
 
 
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 11*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 6000, nonlinearity=lrelu))
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 5000, nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.35)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 4000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2500, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
     final_output_dis = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
 
@@ -112,16 +112,16 @@ def gen_model(input_noise, input_text):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    first_hidden_layer = batch_norm(DenseLayer(input_gen, 4000, nonlinearity=lrelu))
+    first_hidden_layer = batch_norm(DenseLayer(input_gen, 2500, nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 6000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 5000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 13*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 13, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 11*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 11, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 17, 5, stride=1, crop=2, nonlinearity=lrelu))
     second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=lrelu)
     return second_conv_layer
 
