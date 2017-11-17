@@ -83,19 +83,19 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 12, 3, stride=1, pad=1, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 7, 3, stride=1, pad=1, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 13, 5, stride=1, pad=2, nonlinearity=lrelu))
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 7*64*64))
+    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 13*64*64))
 
 
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 11*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 5000, nonlinearity=lrelu))
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 6000, nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.35)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 4000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
     final_output_dis = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
 
@@ -112,17 +112,17 @@ def gen_model(input_noise, input_text):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    first_hidden_layer = batch_norm(DenseLayer(input_gen, 2000, nonlinearity=lrelu))
+    first_hidden_layer = batch_norm(DenseLayer(input_gen, 4000, nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 5000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 6000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 7*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 7, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 13*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 13, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 12, 3, stride=1, crop=1, nonlinearity=lrelu))
-    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 3, stride=1, crop=1, nonlinearity=lrelu)
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
+    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=lrelu)
     return second_conv_layer
 
 
@@ -162,8 +162,8 @@ def train_network():
     gen_params = lasagne.layers.get_all_params(gen, trainable=True)
     disc_params = lasagne.layers.get_all_params(disc, trainable=True)
     
-    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1e-4)
-    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1e-4)
+    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=2.5e-4)
+    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=2.5e-4)
 
     train_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(real_img_val >= .5).mean(),
@@ -184,8 +184,8 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 5
-    batch_size = 200
+    num_epochs = 20
+    batch_size = 125
     iter_per_epoch = X_train_img.shape[0]/batch_size
     num_iters_inner = 3
     count = 0
@@ -224,10 +224,14 @@ def train_network():
                 arr = test_samples[x]
                 c, w, h = arr.shape
                 arr = np.reshape(arr, (w, h, c))
+                arr_copy = np.array(arr)
                 arr = scaleupArray(arr)
                 arr = np.asarray(arr)
+                arr_copy = np.asarray(arr_copy)
                 im = Image.fromarray(np.uint8(arr))
-                im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/answers_2_1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im2 = Image.fromarray(np.uint8(arr_copy))
+                im2.save("/home/utkarsh1404/project/text2image/data/answers_2_2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
             np.save('test_images_pixel_values.npy', img_dc)
 
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
