@@ -8,11 +8,34 @@ def imgtobin():
     val_dict = {}
     test_dict = {}
 
+    sz = 0
+    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
+        for filename in filenames:
+            if filename.endswith('.jpg'):
+                sz+=1
+
+    dummy_arr = np.zeros((sz, 128, 128, 3))
+    ct=0
     for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
                 pix = np.array(pix)
+                dummy_arr[ct] = pix
+                ct+=1
+
+    mean = np.mean(dummy_arr, axis=0)
+    std = np.std(dummy_arr, axis=0)
+
+    print mean.shape
+
+
+    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
+        for filename in filenames:
+            if filename.endswith('.jpg'):
+                pix = Image.open(os.path.join(dirname, filename))
+                pix = np.array(pix)
+                pix = (pix - mean)/(1.0*std)
                 #print(os.path.join(dirname, filename))
 
                 w, h, c = pix.shape 
@@ -25,6 +48,7 @@ def imgtobin():
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
                 pix = np.array(pix)
+                pix = (pix - mean)/(1.0*std)
                 #print(os.path.join(dirname, filename))
 
                 w, h, c = pix.shape 
@@ -37,6 +61,7 @@ def imgtobin():
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
                 pix = np.array(pix)
+                pix = (pix - mean)/(1.0*std)
                 #print(os.path.join(dirname, filename))
 
                 w, h, c = pix.shape 

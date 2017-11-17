@@ -126,6 +126,18 @@ def gen_model(input_noise, input_text):
     return second_conv_layer
 
 
+def scaleupArray(arr):
+    w, h, c = arr.shape
+    maxVal = np.max(arr, axis=(0,1))*1.0
+    minVal = np.min(arr, axis=(0,1))*1.0
+    for id in range(c):
+        currMinVal = minVal[id]
+        currMaxVal = maxVal[id]
+        for l1 in range(w):
+            for l2 in range(h):
+                arr[l1][l2][id] = ((arr[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))*255
+    return arr
+
 
 def train_network():
     print "Start Training!"    
@@ -141,7 +153,7 @@ def train_network():
 
     all_layers = lasagne.layers.get_all_layers(disc)
     #print all_layers
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen, dtype = 'int8'), all_layers[9]: input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[9]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
@@ -165,17 +177,17 @@ def train_network():
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'), all_layers[9] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[9] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'), all_layers[9] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[9] : input_text}, deterministic=True) >= .5).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
-                                lasagne.layers.get_output(gen, deterministic=True, dtype = 'int8'))
+                                lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 4
+    num_epochs = 1
     batch_size = 200
     iter_per_epoch = X_train_img.shape[0]/batch_size
-    num_iters_inner = 3
+    num_iters_inner = 2
     count = 0
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
@@ -189,7 +201,7 @@ def train_network():
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
             noise = np.random.rand(batch_size, 200)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
-            if count%100==0:
+            if count%10==0:
                 print "Iters done : (", count, "/", (iter_per_epoch*num_epochs), ")"
             count += 1
         train_disc_acc /= (1.0 * num_iters_inner * iter_per_epoch)
@@ -203,15 +215,20 @@ def train_network():
         print "Current_gen_acc = ", test_gen_fn(curr_noise, X_train_caption)
 
         if epoch==num_epochs-1:
+            img_dc = {}
             curr_noise = np.random.rand(X_test_img.shape[0], 200)
-            test_samples = test_gen_fn_samples(curr_noise, X_test_caption)
+            test_samples = np.array(test_gen_fn_samples(curr_noise, X_test_caption))
+            print test_samples.shape
             for x in range(test_samples.shape[0]):
+                img_dc[imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]] = np.array(test_samples[x])
                 arr = test_samples[x]
                 c, w, h = arr.shape
                 arr = np.reshape(arr, (w, h, c))
+                arr = scaleupArray(arr)
                 arr = np.asarray(arr)
                 im = Image.fromarray(np.uint8(arr))
-                im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]+".jpg")
+                im.save("/home/utkarsh1404/project/text2image/data/answers/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+            np.save('test_images_pixel_values.npy', img_dc)
 
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
 train_network()
