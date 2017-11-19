@@ -9,14 +9,14 @@ def imgtobin():
     test_dict = {}
 
     sz = 0
-    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 sz+=1
 
     dummy_arr = np.zeros((sz, 128, 128, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -30,7 +30,7 @@ def imgtobin():
     print mean.shape
 
 
-    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -43,7 +43,7 @@ def imgtobin():
 
                 train_dict[filename] = pix
      
-    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/validate'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/validate'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -56,7 +56,7 @@ def imgtobin():
 
                 val_dict[filename] = pix
        
-    for dirname, dirnames, filenames in os.walk('../../data/samplesResized/test'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/test'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))

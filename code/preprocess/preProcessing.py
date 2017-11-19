@@ -1,14 +1,14 @@
 import gensim
 import numpy as np
-model = gensim.models.KeyedVectors.load_word2vec_format('../../GoogleNews-vectors-negative300.bin', binary=True)
+model = gensim.models.KeyedVectors.load_word2vec_format('/home/kruti/text2image/GoogleNews-vectors-negative300.bin', binary=True)
 
 #print model['tree']
 #print model['Tree']
 #print model['and']
 
-train = np.load('../../data/img_to_caption_train.npy').item()
-validate = np.load('../../data/img_to_caption_validate.npy').item()
-test = np.load('../../data/img_to_caption_test.npy').item()
+train = np.load('/home/kruti/text2image/data/img_to_caption_train.npy').item()
+validate = np.load('/home/kruti/text2image/data/img_to_caption_validate.npy').item()
+test = np.load('/home/kruti/text2image/data/img_to_caption_test.npy').item()
 
 
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -126,8 +126,8 @@ for key in final_test:
     test_vec[key] = currArray   
 
 
-np.save('../../data/system_input_train.npy', train_vec)
-np.save('../../data/system_input_validate.npy', validate_vec)
-np.save('../../data/system_input_test.npy', test_vec)
+np.save('/home/kruti/text2image/data/system_input_train.npy', train_vec)
+np.save('/home/kruti/text2image/data/system_input_validate.npy', validate_vec)
+np.save('/home/kruti/text2image/data/system_input_test.npy', test_vec)
 
 print validate_vec

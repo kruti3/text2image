@@ -42,7 +42,6 @@ def load_dataset():
     for key in train_caption:
         imageIdToNameDict[global_ctr] = key
         imageIdToCaptionVectorDict[global_ctr] = train_caption[key]
-        print key
         X_train_caption_lcl[counter] = train_caption[key]
         X_train_img_lcl[counter] = train_img_raw[key]
         counter+=1
