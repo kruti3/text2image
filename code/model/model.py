@@ -186,10 +186,10 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 1#24
-    batch_size = 10#125
-    iter_per_epoch = 1#1+X_train_img.shape[0]/batch_size
-    num_iters_inner = 1#3
+    num_epochs = 20
+    batch_size = 125
+    iter_per_epoch = 1+X_train_img.shape[0]/batch_size
+    num_iters_inner = 3
     count = 0
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):

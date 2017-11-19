@@ -20,7 +20,7 @@ def imgtobin():
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix)
+                pix = np.array(pix, dtype=np.float)
                 dummy_arr[ct] = pix
                 ct+=1
 
@@ -34,7 +34,7 @@ def imgtobin():
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix)
+                pix = np.array(pix, dtype=np.float)
                 pix = (pix - mean)/(1.0*std)
                 #print(os.path.join(dirname, filename))
 
@@ -47,7 +47,7 @@ def imgtobin():
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix)
+                pix = np.array(pix, dtype=np.float)
                 pix = (pix - mean)/(1.0*std)
                 #print(os.path.join(dirname, filename))
 
@@ -60,7 +60,7 @@ def imgtobin():
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix)
+                pix = np.array(pix, dtype=np.float)
                 pix = (pix - mean)/(1.0*std)
                 #print(os.path.join(dirname, filename))
 
