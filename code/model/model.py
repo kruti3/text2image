@@ -213,8 +213,9 @@ def train_network():
         print "Train_gen_acc_avg = ", train_gen_acc
         
         curr_noise = np.random.rand(X_train_img.shape[0], 200)
-        print "Current_disc_acc = ", test_disc_fn(X_train_img, curr_noise, X_train_caption)
-        print "Current_gen_acc = ", test_gen_fn(curr_noise, X_train_caption)
+        vals = test_disc_fn(X_train_img, curr_noise, X_train_caption)
+        print "Current_disc_acc = ", vals
+        print "Current_gen_acc = ", 1.0 - vals[1]
 
         if epoch==num_epochs-1:
             img_dc = {}
