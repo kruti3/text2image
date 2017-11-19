@@ -23,9 +23,9 @@ def load_dataset():
 
     #print test_img_raw
     
-    train_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_train.npy').item()
-    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_validate.npy').item()
-    test_caption = np.load('/home/utkarsh1404/project/text2image/data/system_input_test.npy').item()
+    train_caption = np.load('/home/kruti/text2image/data/system_input_train.npy').item()
+    validate_caption = np.load('/home/kruti/text2image/data/system_input_validate.npy').item()
+    test_caption = np.load('/home/kruti/text2image/data/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 11 , 300))
@@ -122,10 +122,10 @@ def gen_model(input_noise, input_text):
     third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 11, 128, 128))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 17, 5, stride=1, crop=2, nonlinearity=lrelu))
-    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=lrelu)
+    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
     return second_conv_layer
 
-
+'''
 def scaleupArray(arr):
     w, h, c = arr.shape
     maxVal = np.max(arr, axis=(0,1))*1.0
@@ -137,9 +137,13 @@ def scaleupArray(arr):
             for l2 in range(h):
                 arr[l1][l2][id] = ((arr[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))*255
     return arr
+'''
+def scaleupArray(arr):
 
+    arr = (arr+1.0/2.0)*255
+    return arr
 
-def train_network():
+def train_network(num_epochs, batch_size, num_iters_inner):
     print "Start Training!"    
 
     input_noise = T.dmatrix('n')
@@ -183,12 +187,15 @@ def train_network():
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
-
+    '''
     num_epochs = 24
     batch_size = 125
     iter_per_epoch = 1+X_train_img.shape[0]/batch_size
     num_iters_inner = 3
+    '''
+    iter_per_epoch = 1+X_train_img.shape[0]/batch_size
     count = 0
+    
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
         train_disc_acc = 0.0
@@ -229,11 +236,21 @@ def train_network():
                 arr = np.asarray(arr)
                 arr_copy = np.asarray(arr_copy)
                 im = Image.fromarray(np.uint8(arr))
-                im.save("/home/utkarsh1404/project/text2image/data/answers_2_1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/kruti/text2image/data/answers_2_1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 im2 = Image.fromarray(np.uint8(arr_copy))
-                im2.save("/home/utkarsh1404/project/text2image/data/answers_2_2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im2.save("/home/kruti/text2image/data/answers_2_2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
             np.save('test_images_pixel_values.npy', img_dc)
 
-X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
-train_network()
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num_epochs', metavar='path', required=False, default=24)
+    parser.add_argument('--batch_size', metavar='path', required=False, default=125)
+    parser.add_argument('--num_iters_inner', metavar='path', required=False, default=3)
+    args = parser.parse_args()
+    
+    X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
+    train_network(num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
 
