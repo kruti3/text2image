@@ -122,22 +122,24 @@ def gen_model(input_noise, input_text):
     third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 11, 128, 128))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 17, 5, stride=1, crop=2, nonlinearity=lrelu))
-    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=lrelu)
+    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=lasagne.nonlinearities.tanh)
     return second_conv_layer
 
 
 def scaleupArray(arr):
+    return ((arr+1.0)/2.0)*255.0
+    '''
     w, h, c = arr.shape
-    maxVal = np.max(arr, axis=(0,1))*1.0
-    minVal = np.min(arr, axis=(0,1))*1.0
+    maxVal = 1#np.max(arr, axis=(0,1))*1.0
+    minVal = -1#np.min(arr, axis=(0,1))*1.0
     for id in range(c):
-        currMinVal = minVal[id]
-        currMaxVal = maxVal[id]
+        #currMinVal = minVal[id]
+        #currMaxVal = maxVal[id]
         for l1 in range(w):
             for l2 in range(h):
-                arr[l1][l2][id] = ((arr[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))*255
+                arr[l1][l2][id] = ((arr[l1][l2][id] - minVal)/(currMaxVal-currMinVal))*255
     return arr
-
+    '''
 
 def train_network():
     print "Start Training!"    
@@ -184,10 +186,10 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 24
-    batch_size = 125
-    iter_per_epoch = 1+X_train_img.shape[0]/batch_size
-    num_iters_inner = 3
+    num_epochs = 1#24
+    batch_size = 10#125
+    iter_per_epoch = 1#1+X_train_img.shape[0]/batch_size
+    num_iters_inner = 1#3
     count = 0
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
