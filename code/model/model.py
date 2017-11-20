@@ -164,8 +164,8 @@ def train_network():
     gen_params = lasagne.layers.get_all_params(gen, trainable=True)
     disc_params = lasagne.layers.get_all_params(disc, trainable=True)
     
-    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=2.5e-4)
-    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=2.5e-4)
+    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=7.5e-5)
+    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=7.5e-5)
 
     train_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(real_img_val >= .5).mean(),
@@ -186,10 +186,10 @@ def train_network():
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
 
-    num_epochs = 20
-    batch_size = 125
-    iter_per_epoch = 1+X_train_img.shape[0]/batch_size
-    num_iters_inner = 3
+    num_epochs = 10
+    batch_size = 150
+    iter_per_epoch = 2+X_train_img.shape[0]/batch_size
+    num_iters_inner = 2
     count = 0
     print "Set-up system! Starting epochs!"
     for epoch in range(num_epochs):
