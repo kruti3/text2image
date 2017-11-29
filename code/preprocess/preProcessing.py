@@ -1,14 +1,14 @@
 import gensim
 import numpy as np
-model = gensim.models.KeyedVectors.load_word2vec_format('/home/kruti/text2image/GoogleNews-vectors-negative300.bin', binary=True)
+model = gensim.models.KeyedVectors.load_word2vec_format('/home/utkarsh1404/project/text2image/GoogleNews-vectors-negative300.bin', binary=True)
 
 #print model['tree']
 #print model['Tree']
 #print model['and']
 
-train = np.load('/home/kruti/text2image/data/img_to_caption_train.npy').item()
-validate = np.load('/home/kruti/text2image/data/img_to_caption_validate.npy').item()
-test = np.load('/home/kruti/text2image/data/img_to_caption_test.npy').item()
+train = np.load('/home/utkarsh1404/project/text2image/data/img_to_caption_train.npy').item()
+validate = np.load('/home/utkarsh1404/project/text2image/data/img_to_caption_validate.npy').item()
+test = np.load('/home/utkarsh1404/project/text2image/data/img_to_caption_test.npy').item()
 
 
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -75,7 +75,7 @@ validate_vec = {}
 test_vec = {}
 
 for key in final_train:
-    currArray = np.zeros((11,300))
+    currArray = np.zeros((maxLen,300))
     words = final_train[key]
     counter = 0
     for word in words:
@@ -92,7 +92,7 @@ for key in final_train:
     train_vec[key] = currArray   
 
 for key in final_validate:
-    currArray = np.zeros((11,300))
+    currArray = np.zeros((maxLen,300))
     words = final_validate[key]
     counter = 0
     for word in words:
@@ -109,7 +109,7 @@ for key in final_validate:
     validate_vec[key] = currArray   
 
 for key in final_test:
-    currArray = np.zeros((11,300))
+    currArray = np.zeros((maxLen,300))
     words = final_test[key]
     counter = 0
     for word in words:
@@ -126,8 +126,8 @@ for key in final_test:
     test_vec[key] = currArray   
 
 
-np.save('/home/kruti/text2image/data/system_input_train.npy', train_vec)
-np.save('/home/kruti/text2image/data/system_input_validate.npy', validate_vec)
-np.save('/home/kruti/text2image/data/system_input_test.npy', test_vec)
+np.save('/home/utkarsh1404/project/text2image/data/system_input_train.npy', train_vec)
+np.save('/home/utkarsh1404/project/text2image/data/system_input_validate.npy', validate_vec)
+np.save('/home/utkarsh1404/project/text2image/data/system_input_test.npy', test_vec)
 
 print validate_vec
