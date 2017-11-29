@@ -88,7 +88,6 @@ def disc_model(input_img, input_text):
     pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
     conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 11*64*64))
 
-
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 11*300))
 
@@ -101,8 +100,7 @@ def disc_model(input_img, input_text):
 
     return final_output_dis
 
-
-def gen_model(input_noise, input_text):
+def gen_model(tanh_flag, input_noise, input_text):
     # Generator model
     lrelu = LeakyRectify(0.1)
 
@@ -122,11 +120,32 @@ def gen_model(input_noise, input_text):
     third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 11, 128, 128))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 17, 5, stride=1, crop=2, nonlinearity=lrelu))
-    second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
+    if tanh_flag:
+        second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
+    else:
+        second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=sigmoid)
+    
     return second_conv_layer
 
-'''
-def scaleupArray(arr):
+def scaleTrain(arr):
+
+    dummy_arr = np.zeros((sz, 128, 128, 3))
+    ct=0
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+        for filename in filenames:
+            if filename.endswith('.jpg'):
+                pix = Image.open(os.path.join(dirname, filename))
+                pix = np.array(pix, dtype=np.float)
+                dummy_arr[ct] = pix
+                ct+=1
+
+    mean = np.mean(dummy_arr, axis=0)
+    std = np.std(dummy_arr, axis=0)
+
+    arr = (arr*std)+mean
+    return arr
+
+def scaleActualRange(arr):
     w, h, c = arr.shape
     maxVal = np.max(arr, axis=(0,1))*1.0
     minVal = np.min(arr, axis=(0,1))*1.0
@@ -137,20 +156,23 @@ def scaleupArray(arr):
             for l2 in range(h):
                 arr[l1][l2][id] = ((arr[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))*255
     return arr
-'''
-def scaleupArray(arr):
 
-    arr = ((arr+1.0)/2.0)*255
+def scaleRange(arr, tanh_flag):
+
+    if tanh_flag:
+        arr = ((arr+1.0)/2.0)*255
+    else:
+        arr = (arr)*255
     return arr
 
-def train_network(num_epochs, batch_size, num_iters_inner):
+def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
     print "Start Training!"    
 
     input_noise = T.dmatrix('n')
     input_image = T.dtensor4('i')
     input_text = T.dtensor3('t')
 
-    gen = gen_model(input_noise, input_text)
+    gen = gen_model(tanh_flag, input_noise, input_text)
     disc = disc_model(input_image, input_text)
 
     real_img_val = lasagne.layers.get_output(disc)
@@ -200,17 +222,21 @@ def train_network(num_epochs, batch_size, num_iters_inner):
     for epoch in range(num_epochs):
         train_disc_acc = 0.0
         train_gen_acc = 0.0
+
         for itern in range(iter_per_epoch):
             for inner_itern in range(num_iters_inner):
                 imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
                 noise = np.random.rand(batch_size, 200)
                 train_disc_acc += np.array(train_disc_fn(imgs, noise, caption))
+        
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
             noise = np.random.rand(batch_size, 200)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
+        
             if count%10==0:
                 print "Iters done : (", count, "/", (iter_per_epoch*num_epochs), ")"
             count += 1
+        
         train_disc_acc /= (1.0 * num_iters_inner * iter_per_epoch)
         train_gen_acc /= (1.0 * iter_per_epoch) 
         print "Epoch done : (", (epoch+1), "/", num_epochs, ")"
@@ -232,14 +258,25 @@ def train_network(num_epochs, batch_size, num_iters_inner):
                 arr = test_samples[x]
                 c, w, h = arr.shape
                 arr = np.reshape(arr, (w, h, c))
-                arr_copy = np.array(arr)
-                arr = scaleupArray(arr)
-                arr = np.asarray(arr)
-                arr_copy = np.asarray(arr_copy)
-                im = Image.fromarray(np.uint8(arr))
-                im.save("/home/kruti/text2image/data/answers_2_1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                im2 = Image.fromarray(np.uint8(arr_copy))
-                im2.save("/home/kruti/text2image/data/answers_2_2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                
+                arr1 = np.asarray(scaleTrain(arr))
+                im = Image.fromarray(np.uint8(arr1))
+                im.save("/home/kruti/text2image/data/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                im.save("/home/kruti/text2image/data/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                
+                arr2 = np.asarray(scaleRange(arr))
+                im = Image.fromarray(np.uint8(arr2))
+                im.save("/home/kruti/text2image/data/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                im.save("/home/kruti/text2image/data/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                
+                arr3 = np.asarray(scaleActualRange(arr, tanh_flag))
+                im = Image.fromarray(np.uint8(arr3))
+                im.save("/home/kruti/text2image/data/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                im.save("/home/kruti/text2image/data/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                
             np.save('test_images_pixel_values.npy', img_dc)
 
 
@@ -247,11 +284,12 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_epochs', metavar='path', required=False, default=24)
-    parser.add_argument('--batch_size', metavar='path', required=False, default=125)
-    parser.add_argument('--num_iters_inner', metavar='path', required=False, default=3)
+    parser.add_argument('--tanh_flag', required=True, type=bool, default=True)
+    parser.add_argument('--num_epochs', required=False, type=int, default=24)
+    parser.add_argument('--batch_size', required=False, type=int, default=125)
+    parser.add_argument('--num_iters_inner', required=False, type=int, default=3)
     args = parser.parse_args()
     
     X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
-    train_network(num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
+    train_network(tanh_flag=args.tanh_flag, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
 
