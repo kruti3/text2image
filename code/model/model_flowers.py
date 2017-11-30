@@ -95,11 +95,11 @@ def disc_model(input_img, input_text):
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 4000, nonlinearity=lrelu))
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 4500, nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.3)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2500, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
-    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 1000, nonlinearity=lrelu))
+    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 1500, nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.3)
     final_output_dis = DenseLayer(third_hidden_layer, 2, nonlinearity = sigmoid)
 
@@ -115,13 +115,13 @@ def gen_model(tanh_flag, input_noise, input_text):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 1000, nonlinearity=lrelu))
+    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 1500, nonlinearity=lrelu))
     zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.15)
 
-    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 2000, nonlinearity=lrelu))
+    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 2500, nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 4000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 4500, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
     third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
