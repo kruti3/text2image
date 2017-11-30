@@ -141,6 +141,11 @@ def gen_model(tanh_flag, input_noise, input_text):
 
 def scaleTrain(arr):
 
+    sz = 0
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+        for filename in filenames:
+            if filename.endswith('.jpg'):
+                    sz+=1
     dummy_arr = np.zeros((sz, 128, 128, 3))
     ct=0
     for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
