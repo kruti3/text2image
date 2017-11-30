@@ -17,7 +17,7 @@ test_vec = {}
 import glob, os, shutil
 files = glob.iglob(os.path.join("/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train/", "*.jpg"))
 for file in files:
-    fileName = file.split("/")[8]
+    fileName = file.split("/")[9]
     print fileName
     if 'sunflower' in fileName:
         train_vec[fileName] = np.copy(sunflower)
@@ -26,7 +26,7 @@ for file in files:
 
 files = glob.iglob(os.path.join("/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/validate/", "*.jpg"))
 for file in files:
-    fileName = file.split("/")[8]
+    fileName = file.split("/")[9]
     if 'sunflower' in fileName:
         validate_vec[fileName] = np.copy(sunflower)
     else:
@@ -34,7 +34,7 @@ for file in files:
 
 files = glob.iglob(os.path.join("/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/test/", "*.jpg"))
 for file in files:
-    fileName = file.split("/")[8]
+    fileName = file.split("/")[9]
     if 'sunflower' in fileName:
         test_vec[fileName] = np.copy(sunflower)
     else:
