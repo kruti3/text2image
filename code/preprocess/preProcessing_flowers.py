@@ -18,6 +18,7 @@ import glob, os, shutil
 files = glob.iglob(os.path.join("/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train/", "*.jpg"))
 for file in files:
     fileName = file.split("/")[8]
+    print fileName
     if 'sunflower' in fileName:
         train_vec[fileName] = np.copy(sunflower)
     else:
