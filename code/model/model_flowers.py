@@ -83,13 +83,13 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 22, 5, stride=1, pad=2, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 25, 5, stride=1, pad=2, nonlinearity=lrelu))
     second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
     third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 18, 5, stride=1, pad=2, nonlinearity=lrelu))
     fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, 16, 5, stride=1, pad=2, nonlinearity=lrelu))
-    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 13, 5, stride=1, pad=2, nonlinearity=lrelu))
+    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 15, 5, stride=1, pad=2, nonlinearity=lrelu))
     pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], 13*64*64))
+    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], 15*64*64))
 
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
@@ -109,7 +109,7 @@ def gen_model(tanh_flag, input_noise, input_text):
     # Generator model
     lrelu = LeakyRectify(0.1)
 
-    input_gen_noise = InputLayer(shape=(None, 100), input_var=input_noise)
+    input_gen_noise = InputLayer(shape=(None, 50), input_var=input_noise)
     input_gen_text = InputLayer(shape=(None, 1, 300), input_var=input_text)
     input_gen_text = ReshapeLayer(input_gen_text, ([0], 1*300))
 
@@ -124,13 +124,13 @@ def gen_model(tanh_flag, input_noise, input_text):
     second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 4000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 13*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 13, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 16, 5, stride=1, crop=2, nonlinearity=lrelu))
     second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 18, 5, stride=1, crop=2, nonlinearity=lrelu))
     third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 22, 5, stride=1, crop=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 25, 5, stride=1, crop=2, nonlinearity=lrelu))
     fifth_conv_layer = None
     if tanh_flag==0:
         fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
@@ -266,11 +266,11 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         for itern in range(iter_per_epoch):
             for inner_itern in range(num_iters_inner):
                 imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
-                noise = np.random.rand(batch_size, 100)
+                noise = np.random.rand(batch_size, 50)
                 train_disc_acc += np.array(train_disc_fn(imgs, noise, caption))
         
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
-            noise = np.random.rand(batch_size, 100)
+            noise = np.random.rand(batch_size, 50)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
         
             if count%10==0:
@@ -283,7 +283,7 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         #print "Train_disc_acc_avg = ", train_disc_acc
         #print "Train_gen_acc_avg = ", train_gen_acc
         
-        curr_noise = np.random.rand(X_train_img.shape[0], 100)
+        curr_noise = np.random.rand(X_train_img.shape[0], 50)
         vals = test_disc_fn(X_train_img, curr_noise, X_train_caption)
         vals2 = test_disc_loss_fn(X_train_img, curr_noise, X_train_caption)
         print "Current_disc_acc = ", vals
@@ -292,7 +292,7 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         
         if epoch==num_epochs-1:
             img_dc = {}
-            curr_noise = np.random.rand(X_test_img.shape[0], 100)
+            curr_noise = np.random.rand(X_test_img.shape[0], 50)
             test_samples = np.array(test_gen_fn_samples(curr_noise, X_test_caption))
             print test_samples.shape
             for x in range(test_samples.shape[0]):
