@@ -83,9 +83,9 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 18, 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 16, 5, stride=1, pad=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 14, 5, stride=1, pad=2, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 18, 5, stride=1, pad=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 16, 5, stride=1, pad=2, nonlinearity=lrelu))
     fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, 12, 5, stride=1, pad=2, nonlinearity=lrelu))
     fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 10, 5, stride=1, pad=2, nonlinearity=lrelu))
     pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
@@ -128,9 +128,9 @@ def gen_model(tanh_flag, input_noise, input_text):
     third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 10, 128, 128))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 12, 5, stride=1, crop=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 14, 5, stride=1, crop=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 16, 5, stride=1, crop=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 18, 5, stride=1, crop=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 16, 5, stride=1, crop=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 18, 5, stride=1, crop=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
     fifth_conv_layer = None
     if tanh_flag==0:
         fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
@@ -224,8 +224,8 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
     gen_params = lasagne.layers.get_all_params(gen, trainable=True)
     disc_params = lasagne.layers.get_all_params(disc, trainable=True)
     
-    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1e-4)
-    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1e-4)
+    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1e-5)
+    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1e-5)
 
     train_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(real_img_val >= .5).mean(),
@@ -280,8 +280,8 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         train_disc_acc /= (1.0 * num_iters_inner * iter_per_epoch)
         train_gen_acc /= (1.0 * iter_per_epoch) 
         print "Epoch done : (", (epoch+1), "/", num_epochs, ")"
-        print "Train_disc_acc_avg = ", train_disc_acc
-        print "Train_gen_acc_avg = ", train_gen_acc
+        #print "Train_disc_acc_avg = ", train_disc_acc
+        #print "Train_gen_acc_avg = ", train_gen_acc
         
         curr_noise = np.random.rand(X_train_img.shape[0], 100)
         vals = test_disc_fn(X_train_img, curr_noise, X_train_caption)
@@ -333,9 +333,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--tanh_flag', required=True, type=int, default=0)
-    parser.add_argument('--num_epochs', required=False, type=int, default=15)
-    parser.add_argument('--batch_size', required=False, type=int, default=75)
-    parser.add_argument('--num_iters_inner', required=False, type=int, default=3)
+    parser.add_argument('--num_epochs', required=False, type=int, default=55)
+    parser.add_argument('--batch_size', required=False, type=int, default=100)
+    parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
     args = parser.parse_args()
     
     print "tan flag value : ", args.tanh_flag
