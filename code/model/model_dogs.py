@@ -242,7 +242,11 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
                                 (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
                                [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) >= .5).mean()])
-    
+ 
+    test_disc_loss_fn = theano.function([input_image, input_noise, input_text],
+                               [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True), 0)).mean(),
+                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True),1).mean()])
+       
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
     '''
@@ -281,9 +285,12 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         
         curr_noise = np.random.rand(X_train_img.shape[0], 100)
         vals = test_disc_fn(X_train_img, curr_noise, X_train_caption)
+        vals2 = test_disc_loss_fn(X_train_img, curr_noise, X_train_caption)
+
         print "Current_disc_acc = ", vals
         print "Current_gen_acc = ", 1.0 - vals[1]
-        
+        print "LOSS VALUE : ", vals2       
+
         if epoch==num_epochs-1:
             img_dc = {}
             curr_noise = np.random.rand(X_test_img.shape[0], 100)
@@ -298,25 +305,25 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
                 im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
                 img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr), tanh_flag))
                 im = Image.fromarray(np.uint8(arr2))
                 im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
                 img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
                 im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
                 img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
 
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
                 im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
                 img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
             np.save('test_images_pixel_values_dogs.npy', img_dc)
@@ -327,7 +334,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--tanh_flag', required=True, type=int, default=0)
-    parser.add_argument('--num_epochs', required=False, type=int, default=1)
+    parser.add_argument('--num_epochs', required=False, type=int, default=10)
     parser.add_argument('--batch_size', required=False, type=int, default=100)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=2)
     args = parser.parse_args()
