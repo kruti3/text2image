@@ -83,23 +83,23 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 18, 5, stride=1, pad=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 16, 5, stride=1, pad=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, 12, 5, stride=1, pad=2, nonlinearity=lrelu))
-    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 10, 5, stride=1, pad=2, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 30, 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 26, 5, stride=1, pad=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 24, 5, stride=1, pad=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
+    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 15, 5, stride=1, pad=2, nonlinearity=lrelu))
     pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], 10*64*64))
+    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], 15*64*64))
 
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 5000, nonlinearity=lrelu))
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 7500, nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.3)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2500, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 4000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
-    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 1000, nonlinearity=lrelu))
+    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 2000, nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.3)
     final_output_dis = DenseLayer(third_hidden_layer, 2, nonlinearity = sigmoid)
 
@@ -115,22 +115,22 @@ def gen_model(tanh_flag, input_noise, input_text):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 1000, nonlinearity=lrelu))
+    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 2000, nonlinearity=lrelu))
     zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.15)
 
-    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 2500, nonlinearity=lrelu))
+    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 4000, nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 5000, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 7500, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 10*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 10, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 12, 5, stride=1, crop=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 16, 5, stride=1, crop=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 18, 5, stride=1, crop=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 24, 5, stride=1, crop=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 26, 5, stride=1, crop=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 30, 5, stride=1, crop=2, nonlinearity=lrelu))
     fifth_conv_layer = None
     if tanh_flag==0:
         fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
@@ -333,7 +333,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--tanh_flag', required=True, type=int, default=0)
-    parser.add_argument('--num_epochs', required=False, type=int, default=55)
+    parser.add_argument('--num_epochs', required=False, type=int, default=52)
     parser.add_argument('--batch_size', required=False, type=int, default=100)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
     args = parser.parse_args()
