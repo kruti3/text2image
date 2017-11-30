@@ -245,7 +245,7 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
  
     test_disc_loss_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True), 0)).mean(),
-                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True),1).mean()])
+                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True),1)).mean()])
        
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
