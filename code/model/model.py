@@ -18,8 +18,8 @@ imageIdToCaptionVectorDict = {}
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = None, None, None, None, None, None
 
 
-def load_dataset():
-    train_img_raw, val_img_raw, test_img_raw = imgtobin()
+def load_dataset(tanh_flag):
+    train_img_raw, val_img_raw, test_img_raw = imgtobin(tanh_flag)
 
     #print test_img_raw
     
@@ -83,20 +83,25 @@ def disc_model(input_img, input_text):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 17, 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 11, 5, stride=1, pad=2, nonlinearity=lrelu))
-    pooled_second_conv_layer = MaxPool2DLayer(second_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_second_conv_layer, ([0], 11*64*64))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 18, 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 16, 5, stride=1, pad=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 14, 5, stride=1, pad=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, 12, 5, stride=1, pad=2, nonlinearity=lrelu))
+    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 10, 5, stride=1, pad=2, nonlinearity=lrelu))
+    pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
+    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], 10*64*64))
 
     text_input_dis = InputLayer(shape = (None, 11, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 11*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
     frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 5000, nonlinearity=lrelu))
-    frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.35)
+    frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.3)
     second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2500, nonlinearity=lrelu))
-    second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
-    final_output_dis = DenseLayer(second_hidden_layer, 2, nonlinearity = sigmoid)
+    second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
+    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 1000, nonlinearity=lrelu))
+    third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.3)
+    final_output_dis = DenseLayer(third_hidden_layer, 2, nonlinearity = sigmoid)
 
     return final_output_dis
 
@@ -104,28 +109,35 @@ def gen_model(tanh_flag, input_noise, input_text):
     # Generator model
     lrelu = LeakyRectify(0.1)
 
-    input_gen_noise = InputLayer(shape=(None, 200), input_var=input_noise)
+    input_gen_noise = InputLayer(shape=(None, 100), input_var=input_noise)
     input_gen_text = InputLayer(shape=(None, 11, 300), input_var=input_text)
     input_gen_text = ReshapeLayer(input_gen_text, ([0], 11*300))
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    first_hidden_layer = batch_norm(DenseLayer(input_gen, 2500, nonlinearity=lrelu))
+    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 1000, nonlinearity=lrelu))
+    zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.15)
+
+    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 2500, nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
 
     second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 5000, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 11*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 11, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, 10*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 10, 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 17, 5, stride=1, crop=2, nonlinearity=lrelu))
-    if tanh_flag:
-        second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 12, 5, stride=1, crop=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 14, 5, stride=1, crop=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 16, 5, stride=1, crop=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 18, 5, stride=1, crop=2, nonlinearity=lrelu))
+    fifth_conv_layer = None
+    if tanh_flag==0:
+        fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
     else:
-        second_conv_layer = Deconv2DLayer(first_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=sigmoid)
+        fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=sigmoid)
     
-    return second_conv_layer
+    return fifth_conv_layer
 
 def scaleTrain(arr):
 
@@ -143,6 +155,8 @@ def scaleTrain(arr):
     std = np.std(dummy_arr, axis=0)
 
     arr = (arr*std)+mean
+    arr[arr<0.0] = 0.0
+    arr[arr>255.0] = 255.0
     return arr
 
 def scaleActualRange(arr):
@@ -154,12 +168,28 @@ def scaleActualRange(arr):
         currMaxVal = maxVal[id]
         for l1 in range(w):
             for l2 in range(h):
-                arr[l1][l2][id] = ((arr[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))*255
+                arr[l1][l2][id] = ((arr[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))*255.0
+    arr[arr<0.0] = 0.0
+    arr[arr>255.0] = 255.0
+    return arr
+
+def scaleActualRangeChanged(arr):
+    w, h, c = arr.shape
+    maxVal = np.max(arr, axis=(0,1))*1.0
+    minVal = np.min(arr, axis=(0,1))*1.0
+    for id in range(c):
+        currMinVal = minVal[id]
+        currMaxVal = maxVal[id]
+        for l1 in range(w):
+            for l2 in range(h):
+                arr[l1][l2][id] = ((arr[l1][l2][id] * (currMaxVal-currMinVal)) + currMinVal) *255.0
+    arr[arr<0.0] = 0.0
+    arr[arr>255.0] = 255.0
     return arr
 
 def scaleRange(arr, tanh_flag):
 
-    if tanh_flag:
+    if tanh_flag==0:
         arr = ((arr+1.0)/2.0)*255
     else:
         arr = (arr)*255
@@ -178,8 +208,9 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
     real_img_val = lasagne.layers.get_output(disc)
 
     all_layers = lasagne.layers.get_all_layers(disc)
-    #print all_layers
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[9]: input_text})
+    print all_layers
+    # TODO CHECK
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
@@ -203,9 +234,9 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[9] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[9] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) >= .5).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
@@ -226,11 +257,11 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         for itern in range(iter_per_epoch):
             for inner_itern in range(num_iters_inner):
                 imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
-                noise = np.random.rand(batch_size, 200)
+                noise = np.random.rand(batch_size, 100)
                 train_disc_acc += np.array(train_disc_fn(imgs, noise, caption))
         
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
-            noise = np.random.rand(batch_size, 200)
+            noise = np.random.rand(batch_size, 100)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
         
             if count%10==0:
@@ -243,14 +274,14 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         print "Train_disc_acc_avg = ", train_disc_acc
         print "Train_gen_acc_avg = ", train_gen_acc
         
-        curr_noise = np.random.rand(X_train_img.shape[0], 200)
+        curr_noise = np.random.rand(X_train_img.shape[0], 100)
         vals = test_disc_fn(X_train_img, curr_noise, X_train_caption)
         print "Current_disc_acc = ", vals
         print "Current_gen_acc = ", 1.0 - vals[1]
         
         if epoch==num_epochs-1:
             img_dc = {}
-            curr_noise = np.random.rand(X_test_img.shape[0], 200)
+            curr_noise = np.random.rand(X_test_img.shape[0], 100)
             test_samples = np.array(test_gen_fn_samples(curr_noise, X_test_caption))
             print test_samples.shape
             for x in range(test_samples.shape[0]):
@@ -259,23 +290,29 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
                 c, w, h = arr.shape
                 arr = np.reshape(arr, (w, h, c))
                 
-                arr1 = np.asarray(scaleTrain(arr))
+                arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
                 im.save("/home/kruti/text2image/data/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 img = Image.open("/home/kruti/text2image/data/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                im.save("/home/kruti/text2image/data/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img.save("/home/kruti/text2image/data/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
-                arr2 = np.asarray(scaleRange(arr))
+                arr2 = np.asarray(scaleRange(np.copy(arr), tanh_flag))
                 im = Image.fromarray(np.uint8(arr2))
                 im.save("/home/kruti/text2image/data/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 img = Image.open("/home/kruti/text2image/data/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                im.save("/home/kruti/text2image/data/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img.save("/home/kruti/text2image/data/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
-                arr3 = np.asarray(scaleActualRange(arr, tanh_flag))
+                arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
                 im.save("/home/kruti/text2image/data/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 img = Image.open("/home/kruti/text2image/data/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                im.save("/home/kruti/text2image/data/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img.save("/home/kruti/text2image/data/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+
+                arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
+                im = Image.fromarray(np.uint8(arr4))
+                im.save("/home/kruti/text2image/data/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img.save("/home/kruti/text2image/data/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
             np.save('test_images_pixel_values.npy', img_dc)
 
@@ -284,12 +321,12 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tanh_flag', required=True, type=bool, default=True)
-    parser.add_argument('--num_epochs', required=False, type=int, default=24)
-    parser.add_argument('--batch_size', required=False, type=int, default=125)
-    parser.add_argument('--num_iters_inner', required=False, type=int, default=3)
+    parser.add_argument('--tanh_flag', required=True, type=bool, default=0)
+    parser.add_argument('--num_epochs', required=False, type=int, default=1)
+    parser.add_argument('--batch_size', required=False, type=int, default=100)
+    parser.add_argument('--num_iters_inner', required=False, type=int, default=2)
     args = parser.parse_args()
     
-    X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset()
+    X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset(tanh_flag=args.tanh_flag)
     train_network(tanh_flag=args.tanh_flag, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
 

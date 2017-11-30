@@ -2,72 +2,176 @@ import numpy as np
 import os
 from PIL import Image
 
-def imgtobin():
+def imgtobin(tanh_flag):
     
-    train_dict = {}
-    val_dict = {}
-    test_dict = {}
+    if tanh_flag==0:
+        train_dict = {}
+        val_dict = {}
+        test_dict = {}
 
-    sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
-        for filename in filenames:
-            if filename.endswith('.jpg'):
-                sz+=1
+        sz = 0
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    sz+=1
 
-    dummy_arr = np.zeros((sz, 128, 128, 3))
-    ct=0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
-        for filename in filenames:
-            if filename.endswith('.jpg'):
-                pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix, dtype=np.float)
-                dummy_arr[ct] = pix
-                ct+=1
+        dummy_arr = np.zeros((sz, 128, 128, 3))
+        ct=0
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    dummy_arr[ct] = pix
+                    ct+=1
 
-    mean = np.mean(dummy_arr, axis=0)
-    std = np.std(dummy_arr, axis=0)
+        mean = np.mean(dummy_arr, axis=0)
+        std = np.std(dummy_arr, axis=0)
 
-    print mean.shape
+        print mean.shape
 
 
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
-        for filename in filenames:
-            if filename.endswith('.jpg'):
-                pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix, dtype=np.float)
-                pix = (pix - mean)/(1.0*std)
-                #print(os.path.join(dirname, filename))
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    pix = (pix - mean)/(1.0*std)
+                    #print(os.path.join(dirname, filename))
 
-                w, h, c = pix.shape 
-                pix = np.reshape(pix, (c, w, h))
+                    w, h, c = pix.shape 
+                    pix = np.reshape(pix, (c, w, h))
 
-                train_dict[filename] = pix
-     
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/validate'):
-        for filename in filenames:
-            if filename.endswith('.jpg'):
-                pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix, dtype=np.float)
-                pix = (pix - mean)/(1.0*std)
-                #print(os.path.join(dirname, filename))
+                    train_dict[filename] = pix
+         
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/validate'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    pix = (pix - mean)/(1.0*std)
+                    #print(os.path.join(dirname, filename))
 
-                w, h, c = pix.shape 
-                pix = np.reshape(pix, (c, w, h))
+                    w, h, c = pix.shape 
+                    pix = np.reshape(pix, (c, w, h))
 
-                val_dict[filename] = pix
-       
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/test'):
-        for filename in filenames:
-            if filename.endswith('.jpg'):
-                pix = Image.open(os.path.join(dirname, filename))
-                pix = np.array(pix, dtype=np.float)
-                pix = (pix - mean)/(1.0*std)
-                #print(os.path.join(dirname, filename))
+                    val_dict[filename] = pix
+           
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/test'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    pix = (pix - mean)/(1.0*std)
+                    #print(os.path.join(dirname, filename))
 
-                w, h, c = pix.shape 
-                pix = np.reshape(pix, (c, w, h))
+                    w, h, c = pix.shape 
+                    pix = np.reshape(pix, (c, w, h))
 
-                test_dict[filename] = pix
+                    test_dict[filename] = pix
 
-    return train_dict, val_dict, test_dict
+        return train_dict, val_dict, test_dict
+    elif tanh_flag==1:
+        train_dict = {}
+        val_dict = {}
+        test_dict = {}
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    pix = (pix)/(255.0)
+                    #print(os.path.join(dirname, filename))
 
+                    w, h, c = pix.shape 
+                    pix = np.reshape(pix, (c, w, h))
+
+                    train_dict[filename] = pix
+         
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/validate'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    pix = (pix)/(255.0)
+                    #print(os.path.join(dirname, filename))
+
+                    w, h, c = pix.shape 
+                    pix = np.reshape(pix, (c, w, h))
+
+                    val_dict[filename] = pix
+           
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/test'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    pix = (pix)/(255.0)
+                    #print(os.path.join(dirname, filename))
+
+                    w, h, c = pix.shape 
+                    pix = np.reshape(pix, (c, w, h))
+
+                    test_dict[filename] = pix
+
+        return train_dict, val_dict, test_dict
+    elif tanh_flag==2:
+        train_dict = {}
+        val_dict = {}
+        test_dict = {}
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/train'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    w, h, c = pix.shape
+                    maxVal = np.max(pix, axis=(0,1))*1.0
+                    minVal = np.min(pix, axis=(0,1))*1.0
+                    for id in range(c):
+                        currMinVal = minVal[id]
+                        currMaxVal = maxVal[id]
+                        for l1 in range(w):
+                            for l2 in range(h):
+                                pix[l1][l2][id] = ((pix[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))
+                    pix = np.reshape(pix, (c, w, h))
+
+                    train_dict[filename] = pix
+         
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/validate'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    w, h, c = pix.shape
+                    maxVal = np.max(pix, axis=(0,1))*1.0
+                    minVal = np.min(pix, axis=(0,1))*1.0
+                    for id in range(c):
+                        currMinVal = minVal[id]
+                        currMaxVal = maxVal[id]
+                        for l1 in range(w):
+                            for l2 in range(h):
+                                pix[l1][l2][id] = ((pix[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))
+                    pix = np.reshape(pix, (c, w, h))
+
+                    val_dict[filename] = pix
+           
+        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/samplesResized/test'):
+            for filename in filenames:
+                if filename.endswith('.jpg'):
+                    pix = Image.open(os.path.join(dirname, filename))
+                    pix = np.array(pix, dtype=np.float)
+                    w, h, c = pix.shape
+                    maxVal = np.max(pix, axis=(0,1))*1.0
+                    minVal = np.min(pix, axis=(0,1))*1.0
+                    for id in range(c):
+                        currMinVal = minVal[id]
+                        currMaxVal = maxVal[id]
+                        for l1 in range(w):
+                            for l2 in range(h):
+                                pix[l1][l2][id] = ((pix[l1][l2][id] - currMinVal)/(currMaxVal-currMinVal))
+                    pix = np.reshape(pix, (c, w, h))
+
+                    test_dict[filename] = pix
+
+        return train_dict, val_dict, test_dict
+        
