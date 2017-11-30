@@ -321,12 +321,13 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tanh_flag', required=True, type=bool, default=0)
+    parser.add_argument('--tanh_flag', required=True, type=int, default=0)
     parser.add_argument('--num_epochs', required=False, type=int, default=1)
     parser.add_argument('--batch_size', required=False, type=int, default=100)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=2)
     args = parser.parse_args()
     
+    print "tan flag value : ", args.tanh_flag
     X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset(tanh_flag=args.tanh_flag)
     train_network(tanh_flag=args.tanh_flag, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
 
