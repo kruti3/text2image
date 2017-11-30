@@ -10,14 +10,14 @@ def imgtobin_dogs(tanh_flag):
         test_dict = {}
 
         sz = 0
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     sz+=1
 
         dummy_arr = np.zeros((sz, 128, 128, 3))
         ct=0
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -31,7 +31,7 @@ def imgtobin_dogs(tanh_flag):
         print mean.shape
 
 
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -44,7 +44,7 @@ def imgtobin_dogs(tanh_flag):
 
                     train_dict[filename] = pix
          
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/validate'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/validate'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -57,7 +57,7 @@ def imgtobin_dogs(tanh_flag):
 
                     val_dict[filename] = pix
            
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/test'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/test'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -75,7 +75,7 @@ def imgtobin_dogs(tanh_flag):
         train_dict = {}
         val_dict = {}
         test_dict = {}
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -88,7 +88,7 @@ def imgtobin_dogs(tanh_flag):
 
                     train_dict[filename] = pix
          
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/validate'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/validate'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -101,7 +101,7 @@ def imgtobin_dogs(tanh_flag):
 
                     val_dict[filename] = pix
            
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/test'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/test'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -119,7 +119,7 @@ def imgtobin_dogs(tanh_flag):
         train_dict = {}
         val_dict = {}
         test_dict = {}
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -137,7 +137,7 @@ def imgtobin_dogs(tanh_flag):
 
                     train_dict[filename] = pix
          
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/validate'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/validate'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -155,7 +155,7 @@ def imgtobin_dogs(tanh_flag):
 
                     val_dict[filename] = pix
            
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/test'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/test'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -184,14 +184,14 @@ def imgtobin_flowers(tanh_flag):
         test_dict = {}
 
         sz = 0
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     sz+=1
 
         dummy_arr = np.zeros((sz, 128, 128, 3))
         ct=0
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -205,7 +205,7 @@ def imgtobin_flowers(tanh_flag):
         print mean.shape
 
 
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -218,7 +218,7 @@ def imgtobin_flowers(tanh_flag):
 
                     train_dict[filename] = pix
          
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/validate'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/validate'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -231,7 +231,7 @@ def imgtobin_flowers(tanh_flag):
 
                     val_dict[filename] = pix
            
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/test'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/test'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -249,7 +249,7 @@ def imgtobin_flowers(tanh_flag):
         train_dict = {}
         val_dict = {}
         test_dict = {}
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -262,7 +262,7 @@ def imgtobin_flowers(tanh_flag):
 
                     train_dict[filename] = pix
          
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/validate'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/validate'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -275,7 +275,7 @@ def imgtobin_flowers(tanh_flag):
 
                     val_dict[filename] = pix
            
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/test'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/test'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -293,7 +293,7 @@ def imgtobin_flowers(tanh_flag):
         train_dict = {}
         val_dict = {}
         test_dict = {}
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -311,7 +311,7 @@ def imgtobin_flowers(tanh_flag):
 
                     train_dict[filename] = pix
          
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/validate'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/validate'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
@@ -329,7 +329,7 @@ def imgtobin_flowers(tanh_flag):
 
                     val_dict[filename] = pix
            
-        for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/test'):
+        for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/test'):
             for filename in filenames:
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))

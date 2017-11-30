@@ -23,9 +23,9 @@ def load_dataset(tanh_flag):
 
     #print test_img_raw
     
-    train_caption = np.load('/home/kruti/text2image/data/dogs/system_input_train.npy').item()
-    validate_caption = np.load('/home/kruti/text2image/data/dogs/system_input_validate.npy').item()
-    test_caption = np.load('/home/kruti/text2image/data/dogs/system_input_test.npy').item()
+    train_caption = np.load('/home/utkarsh1404/project/text2image/data/dogs/system_input_train.npy').item()
+    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/dogs/system_input_validate.npy').item()
+    test_caption = np.load('/home/utkarsh1404/project/text2image/data/dogs/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 11 , 300))
@@ -142,13 +142,13 @@ def gen_model(tanh_flag, input_noise, input_text):
 def scaleTrain(arr):
 
     sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                     sz+=1
     dummy_arr = np.zeros((sz, 128, 128, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/dogs/samplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -224,8 +224,8 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
     gen_params = lasagne.layers.get_all_params(gen, trainable=True)
     disc_params = lasagne.layers.get_all_params(disc, trainable=True)
     
-    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=2.5e-4)
-    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=2.5e-4)
+    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1e-4)
+    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1e-4)
 
     train_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(real_img_val >= .5).mean(),
@@ -297,27 +297,27 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
                 
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/kruti/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                img.save("/home/kruti/text2image/data/dogs/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr), tanh_flag))
                 im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/kruti/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                img.save("/home/kruti/text2image/data/dogs/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/kruti/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                img.save("/home/kruti/text2image/data/dogs/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
 
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/kruti/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
-                img.save("/home/kruti/text2image/data/dogs/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/dogs/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('LA')
+                img.save("/home/utkarsh1404/project/text2image/data/dogs/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
             np.save('test_images_pixel_values_dogs.npy', img_dc)
 
