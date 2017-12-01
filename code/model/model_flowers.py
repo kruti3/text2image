@@ -4,6 +4,7 @@ import theano.tensor as T
 import lasagne
 import matplotlib.pyplot as plt
 from PIL import Image
+import time
 
 from data_utils import *
 
@@ -23,9 +24,9 @@ def load_dataset(tanh_flag):
 
     #print test_img_raw
     
-    train_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
-    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
-    test_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
+    train_caption = np.load('/home/kruti/text2image/data/flowers/system_input_train.npy').item()
+    validate_caption = np.load('/home/kruti/text2image/data/flowers/system_input_validate.npy').item()
+    test_caption = np.load('/home/kruti/text2image/data/flowers/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 1 , 300))
@@ -78,18 +79,18 @@ def get_sampled_batch_for_training(imgs, captions, batch_size):
     return imgs[lst], captions[lst]
 
 
-def disc_model(input_img, input_text):
+def disc_model(input_img, input_text, layer_list):
     # disc layer description
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, 25, 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, 20, 5, stride=1, pad=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, 18, 5, stride=1, pad=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, 16, 5, stride=1, pad=2, nonlinearity=lrelu))
-    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, 15, 5, stride=1, pad=2, nonlinearity=lrelu))
+    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
     pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], 15*64*64))
+    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], layer_list[0]*64*64))
 
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
@@ -105,7 +106,7 @@ def disc_model(input_img, input_text):
 
     return final_output_dis
 
-def gen_model(tanh_flag, input_noise, input_text):
+def gen_model(input_noise, input_text, tanh_flag, layer_list):
     # Generator model
     lrelu = LeakyRectify(0.1)
 
@@ -124,13 +125,13 @@ def gen_model(tanh_flag, input_noise, input_text):
     second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 4500, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, 15*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], 15, 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, layer_list[0]*128*128, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], layer_list[0], 128, 128))
 
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, 16, 5, stride=1, crop=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, 18, 5, stride=1, crop=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, 20, 5, stride=1, crop=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, 25, 5, stride=1, crop=2, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, layer_list[1], 5, stride=1, crop=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, layer_list[2], 5, stride=1, crop=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, layer_list[3], 5, stride=1, crop=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, layer_list[4], 5, stride=1, crop=2, nonlinearity=lrelu))
     fifth_conv_layer = None
     if tanh_flag==0:
         fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
@@ -142,13 +143,13 @@ def gen_model(tanh_flag, input_noise, input_text):
 def scaleTrain(arr):
 
     sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                     sz+=1
     dummy_arr = np.zeros((sz, 128, 128, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -200,14 +201,14 @@ def scaleRange(arr, tanh_flag):
         arr = (arr)*255
     return arr
 
-def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
+def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner):
     print "Start Training!"    
 
     input_noise = T.dmatrix('n')
     input_image = T.dtensor4('i')
     input_text = T.dtensor3('t')
 
-    gen = gen_model(tanh_flag, input_noise, input_text)
+    gen = gen_model(input_noise, input_text, tanh_flag, layer_list)
     disc = disc_model(input_image, input_text)
 
     real_img_val = lasagne.layers.get_output(disc)
@@ -262,17 +263,26 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
     for epoch in range(num_epochs):
         train_disc_acc = 0.0
         train_gen_acc = 0.0
+        start_1epoch = time.time()
 
         for itern in range(iter_per_epoch):
+            
+            start = time.time()
             for inner_itern in range(num_iters_inner):
                 imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
                 noise = np.random.rand(batch_size, 50)
                 train_disc_acc += np.array(train_disc_fn(imgs, noise, caption))
         
+
             imgs, caption = get_sampled_batch_for_training(X_train_img, X_train_caption, batch_size)
             noise = np.random.rand(batch_size, 50)
             train_gen_acc += np.array(train_gen_fn(noise, caption))
         
+            end = time.time()
+            if(epoch==0 & itern==0):
+                print "Time for 1 iteration in epoch", (end-start)/60
+                print "Estimated time for 1 iteration in epoch", iter_per_epoch*(end-start)/60
+            
             if count%10==0:
                 print "Iters done : (", count, "/", (iter_per_epoch*num_epochs), ")"
             count += 1
@@ -280,6 +290,8 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
         train_disc_acc /= (1.0 * num_iters_inner * iter_per_epoch)
         train_gen_acc /= (1.0 * iter_per_epoch) 
         print "Epoch done : (", (epoch+1), "/", num_epochs, ")"
+        print "Time for 1 epoch", (time.time()-start_1epoch)/60
+                
         #print "Train_disc_acc_avg = ", train_disc_acc
         #print "Train_gen_acc_avg = ", train_gen_acc
         
@@ -303,27 +315,27 @@ def train_network(tanh_flag, num_epochs, batch_size, num_iters_inner):
                 
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/kruti/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/kruti/text2image/data/flowers/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr), tanh_flag))
                 im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/kruti/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/kruti/text2image/data/flowers/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/kruti/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/kruti/text2image/data/flowers/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
 
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/kruti/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/kruti/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/kruti/text2image/data/flowers/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
             np.save('test_images_pixel_values_flowers.npy', img_dc)
 
@@ -336,9 +348,13 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=52)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[15,16,18,20,25])
     args = parser.parse_args()
     
+    num_layers = list(args.layer_list)
+    if(len(num_layers)!=5):
+        print("Give five layer size in decreasing order")
     print "tan flag value : ", args.tanh_flag
     X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset(tanh_flag=args.tanh_flag)
-    train_network(tanh_flag=args.tanh_flag, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
+    train_network(tanh_flag=args.tanh_flag, layer_list=args.layer_list, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
 
