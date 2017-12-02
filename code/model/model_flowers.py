@@ -87,9 +87,9 @@ def disc_model(input_img, input_text, layer_list):
     lrelu = LeakyRectify(0.1)
 
     input_dis = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
-    frst_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
+    #frst_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
+    #second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
     fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
     fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
     #pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
@@ -105,7 +105,7 @@ def disc_model(input_img, input_text, layer_list):
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
     third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 750, nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.3)
-    final_output_dis = DenseLayer(third_hidden_layer, 2, nonlinearity = sigmoid)
+    final_output_dis = DenseLayer(third_hidden_layer, 1, nonlinearity = sigmoid)
 
     return final_output_dis
 
@@ -133,13 +133,13 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, layer_list[1], 5, stride=1, crop=2, nonlinearity=lrelu))
     second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, layer_list[2], 5, stride=1, crop=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, layer_list[3], 5, stride=1, crop=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, layer_list[4], 5, stride=1, crop=2, nonlinearity=lrelu))
+    #third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, layer_list[3], 5, stride=1, crop=2, nonlinearity=lrelu))
+    #fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, layer_list[4], 5, stride=1, crop=2, nonlinearity=lrelu))
     fifth_conv_layer = None
     if tanh_flag==0:
-        fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
+        fifth_conv_layer = Deconv2DLayer(second_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=tanh)
     else:
-        fifth_conv_layer = Deconv2DLayer(fourth_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=sigmoid)
+        fifth_conv_layer = Deconv2DLayer(second_conv_layer, 3, 5, stride=1, crop=2, nonlinearity=sigmoid)
     
     return fifth_conv_layer
 
@@ -219,7 +219,7 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     all_layers = lasagne.layers.get_all_layers(disc)
     # print all_layers
     # TODO CHECK
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[17]: input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[11]: input_text})
 
     gen_loss = lasagne.objectives.squared_error(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.squared_error(real_img_val, 1)
@@ -243,13 +243,13 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[17] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[11] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[17] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[11] : input_text}, deterministic=True) >= .5).mean()])
 
     test_disc_loss_fn = theano.function([input_image, input_noise, input_text],
-                               [(lasagne.objectives.squared_error(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.squared_error(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[17]: input_text}, deterministic=True), 0)).mean(),
-                                (lasagne.objectives.squared_error(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[17]: input_text}, deterministic=True),1)).mean()])
+                               [(lasagne.objectives.squared_error(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.squared_error(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[11]: input_text}, deterministic=True), 0)).mean(),
+                                (lasagne.objectives.squared_error(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[11]: input_text}, deterministic=True),1)).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
@@ -351,7 +351,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=52)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[15,16,18,20,25])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[32, 64, 128])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
