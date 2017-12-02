@@ -146,7 +146,7 @@ def build_generator(input_noise=None, input_text=None):
     layer = batch_norm(DenseLayer(layer, 575))
     layer = batch_norm(DenseLayer(layer, 625))
     layer = batch_norm(DenseLayer(layer, 725))
-    layer = batch_norm(DenseLayer(layer, 1*28*28, nonlinearity=sigmoid)
+    layer = batch_norm(DenseLayer(layer, 1*28*28, nonlinearity=sigmoid))
     layer = ReshapeLayer(layer, ([0], 1, 28, 28))
     print ("Generator output:", layer.output_shape)
     return layer
