@@ -82,7 +82,7 @@ def get_sampled_batch_for_training(imgs, captions, batch_size):
     return imgs[lst], captions[lst]
 
 
-def disc_model(input_img, input_text, layer_list):
+def disc_model(input_img, input_text, layer_list, fclayer_list):
     # disc layer description
     lrelu = LeakyRectify(0.1)
 
@@ -99,17 +99,17 @@ def disc_model(input_img, input_text, layer_list):
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 2500, nonlinearity=lrelu))
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.3)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 1500, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, fclayer_list[1], nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
-    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 750, nonlinearity=lrelu))
+    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, fclayer_list[0], nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.3)
     final_output_dis = DenseLayer(third_hidden_layer, 1, nonlinearity = sigmoid)
 
     return final_output_dis
 
-def gen_model(input_noise, input_text, tanh_flag, layer_list):
+def gen_model(input_noise, input_text, tanh_flag, layer_list, fclayer_list):
     # Generator model
     lrelu = LeakyRectify(0.1)
 
@@ -119,13 +119,13 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 750 , nonlinearity=lrelu))
+    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, fclayer_list[0] , nonlinearity=lrelu))
     zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.3)
 
-    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 1500, nonlinearity=lrelu))
+    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, fclayer_list[1], nonlinearity=lrelu))
     first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.3)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 2500, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, fclayer_list[2], nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
 
     third_hidden_layer = DenseLayer(second_hidden_layer, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
@@ -204,15 +204,15 @@ def scaleRange(arr, tanh_flag):
         arr = (arr)*255
     return arr
 
-def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner):
+def train_network(tanh_flag, layer_list, fclayer_list, num_epochs, batch_size, num_iters_inner):
     print "Start Training!"    
 
     input_noise = T.dmatrix('n')
     input_image = T.dtensor4('i')
     input_text = T.dtensor3('t')
 
-    gen = gen_model(input_noise, input_text, tanh_flag, layer_list)
-    disc = disc_model(input_image, input_text, layer_list)
+    gen = gen_model(input_noise, input_text, tanh_flag, layer_list, fclayer_list)
+    disc = disc_model(input_image, input_text, layer_list, fclayer_list)
 
     real_img_val = lasagne.layers.get_output(disc)
 
@@ -352,6 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
     parser.add_argument('--layer_list', nargs='+', type=int, default=[32, 64, 128])
+    parser.add_argument('--fclayer_list', nargs='+', type=int, default=[750, 1500, 2500])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
@@ -359,5 +360,5 @@ if __name__ == '__main__':
         print("Give five layer size in decreasing order")
     print "tan flag value : ", args.tanh_flag
     X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset(tanh_flag=args.tanh_flag)
-    train_network(tanh_flag=args.tanh_flag, layer_list=args.layer_list, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
+    train_network(tanh_flag=args.tanh_flag, layer_list=args.layer_list, fclayer_list=args.fclayer_list, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
 

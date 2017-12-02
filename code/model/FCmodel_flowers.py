@@ -89,8 +89,8 @@ def disc_model(input_img, input_text, layer_list):
     input_dis = ReshapeLayer(input_dis, ([0], 3*128*128))
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
-    main_first_layer = ConcatLayer([input_dis, text_input_dis], axis=1)
-
+    ithlayer = ConcatLayer([input_dis, text_input_dis], axis=1)
+    '''
     #zeroth_hidden_layer = batch_norm(DenseLayer(main_first_layer, layer_list[7], nonlinearity=lrelu))
     #zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.35)
 
@@ -114,8 +114,13 @@ def disc_model(input_img, input_text, layer_list):
     
     seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[0], nonlinearity=lrelu))
     seventh_hidden_layer = DropoutLayer(seventh_hidden_layer, p=0.35)
+    '''
+    for i in range(len(layer_list)-1, -1,-1):
+        ithlayer = batch_norm(DenseLayer(ithlayer, layer_list[i], nonlinearity=lrelu))
+        ithlayer = DropoutLayer(ithlayer, p=0.35)
     
-    final_output_dis = DenseLayer(seventh_hidden_layer, 2 , nonlinearity=sigmoid)
+
+    final_output_dis = DenseLayer(ithlayer, 2 , nonlinearity=sigmoid)
     
     return final_output_dis
 
@@ -127,8 +132,12 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
     input_gen_text = InputLayer(shape=(None, 1, 300), input_var=input_text)
     input_gen_text = ReshapeLayer(input_gen_text, ([0], 1*300))
 
-    input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
+    ithlayer = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
+    for i in range(0, len(layer_list)):
+        ithlayer = batch_norm(DenseLayer(ithlayer, layer_list[i], nonlinearity=lrelu))
+        ithlayer = DropoutLayer(ithlayer, p=0.35)
+    '''
     zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, layer_list[0], nonlinearity=lrelu))
     zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.35)
 
@@ -152,12 +161,12 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
     
     #seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=lrelu))
     #seventh_hidden_layer = DropoutLayer(seventh_hidden_layer, p=0.35)
-    
+    '''
     final_output_gen = None
     if tanh_flag==0:
-        final_output_gen = DenseLayer(third_hidden_layer, 3*128*128, nonlinearity=tanh)
+        final_output_gen = DenseLayer(ithlayer, 3*128*128, nonlinearity=tanh)
     else:
-        final_output_gen = DenseLayer(third_hidden_layer, 3*128*128, nonlinearity=sigmoid)
+        final_output_gen = DenseLayer(ithlayer, 3*128*128, nonlinearity=sigmoid)
     
     final_output_gen = ReshapeLayer(final_output_gen, ([0], 3, 128, 128))
     return final_output_gen
@@ -304,7 +313,7 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
             end = time.time()
             if(epoch==0 & itern==0):
                 print "Time for 1 iteration in epoch", (end-start)/60
-                print "Estimated time for 1 iteration in epoch", iter_per_epoch*(end-start)/60
+                print "Estimated time for 1 epoch", iter_per_epoch*(end-start)/60
             
             if count%10==0:
                 print "Iters done : (", count, "/", (iter_per_epoch*num_epochs), ")"
@@ -375,8 +384,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
-    if(len(num_layers)!=8):
-        print("Give five layer size in increasing order")
+    print(num_layers)
     print "tan flag value : ", args.tanh_flag
     X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = load_dataset(tanh_flag=args.tanh_flag)
     train_network(tanh_flag=args.tanh_flag, layer_list=args.layer_list, num_epochs=args.num_epochs, batch_size=args.batch_size, num_iters_inner=args.num_iters_inner)
