@@ -91,19 +91,19 @@ def disc_model(input_img, input_text, layer_list):
 
     main_first_layer = ConcatLayer([input_dis, text_input_dis], axis=1)
 
-    zeroth_hidden_layer = batch_norm(DenseLayer(main_first_layer, layer_list[7], nonlinearity=lrelu))
-    zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.35)
+    #zeroth_hidden_layer = batch_norm(DenseLayer(main_first_layer, layer_list[7], nonlinearity=lrelu))
+    #zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.35)
 
-    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, layer_list[6], nonlinearity=lrelu))
-    first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.35)
+    #first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, layer_list[6], nonlinearity=lrelu))
+    #first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.35)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, layer_list[5], nonlinearity=lrelu))
-    second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
+    #second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, layer_list[5], nonlinearity=lrelu))
+    #second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.35)
 
-    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, layer_list[4], nonlinearity=lrelu))
-    third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.35)
+    #third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, layer_list[4], nonlinearity=lrelu))
+    #third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.35)
     
-    fourth_hidden_layer = batch_norm(DenseLayer(third_hidden_layer, layer_list[3], nonlinearity=lrelu))
+    fourth_hidden_layer = batch_norm(DenseLayer(main_first_layer, layer_list[3], nonlinearity=lrelu))
     fourth_hidden_layer = DropoutLayer(fourth_hidden_layer, p=0.35)
     
     fifth_hidden_layer = batch_norm(DenseLayer(fourth_hidden_layer, layer_list[2], nonlinearity=lrelu))
@@ -141,23 +141,23 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
     third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, layer_list[3], nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.35)
     
-    fourth_hidden_layer = batch_norm(DenseLayer(third_hidden_layer, layer_list[4], nonlinearity=lrelu))
-    fourth_hidden_layer = DropoutLayer(fourth_hidden_layer, p=0.35)
+    #fourth_hidden_layer = batch_norm(DenseLayer(third_hidden_layer, layer_list[4], nonlinearity=lrelu))
+    #fourth_hidden_layer = DropoutLayer(fourth_hidden_layer, p=0.35)
     
-    fifth_hidden_layer = batch_norm(DenseLayer(fourth_hidden_layer, layer_list[5], nonlinearity=lrelu))
-    fifth_hidden_layer = DropoutLayer(fifth_hidden_layer, p=0.35)
+    #fifth_hidden_layer = batch_norm(DenseLayer(fourth_hidden_layer, layer_list[5], nonlinearity=lrelu))
+    #fifth_hidden_layer = DropoutLayer(fifth_hidden_layer, p=0.35)
     
-    sixth_hidden_layer = batch_norm(DenseLayer(fifth_hidden_layer, layer_list[6], nonlinearity=lrelu))
-    sixth_hidden_layer = DropoutLayer(sixth_hidden_layer, p=0.35)
+    #sixth_hidden_layer = batch_norm(DenseLayer(fifth_hidden_layer, layer_list[6], nonlinearity=lrelu))
+    #sixth_hidden_layer = DropoutLayer(sixth_hidden_layer, p=0.35)
     
-    seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=lrelu))
-    seventh_hidden_layer = DropoutLayer(seventh_hidden_layer, p=0.35)
+    #seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=lrelu))
+    #seventh_hidden_layer = DropoutLayer(seventh_hidden_layer, p=0.35)
     
     final_output_gen = None
     if tanh_flag==0:
-        final_output_gen = DenseLayer(seventh_hidden_layer, 3*128*128, nonlinearity=tanh)
+        final_output_gen = DenseLayer(third_hidden_layer, 3*128*128, nonlinearity=tanh)
     else:
-        final_output_gen = DenseLayer(seventh_hidden_layer, 3*128*128, nonlinearity=sigmoid)
+        final_output_gen = DenseLayer(third_hidden_layer, 3*128*128, nonlinearity=sigmoid)
     
     final_output_gen = ReshapeLayer(final_output_gen, ([0], 3, 128, 128))
     return final_output_gen
@@ -371,7 +371,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=70)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[400,600,800,1000,1500,2500,5000,15000])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[5000, 10000, 20000, 30000])#[400,600,800,1000,1500,2500,5000,15000])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
