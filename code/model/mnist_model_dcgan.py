@@ -17,17 +17,18 @@ import lasagne
 # and loading it into numpy arrays. It doesn't involve Lasagne at all.
 
 
-word2vec = np.load('/home/utkarsh1404/project/text2image/data/digits/word2vec_digits.npy').item()
+word2vec = np.load('/home/kruti/text2image/data/digits/word2vec_digits.npy').item()
 
-samples_text = np.array((42,1,300))
+samples_text = np.zeros((42,1,300))
 for i in range(42):
     k = (i/4)%10
-    sampled_text[i] = word2vec[str(k)]
+    print (word2vec[str(k)].shape)
+    samples_text[i] = np.reshape(np.array(word2vec[str(k)]),(1,300))
 
 def create_word_vectors(l):
     ar = np.zeros((len(l),1,300))
     for id in range(len(l)):
-        ar[id] = np.reshape(word2vec[str(l[id])], (1,300))
+        ar[id] = np.reshape(np.array(word2vec[str(l[id])]),(1,300))
     return ar  
 
 
@@ -76,8 +77,8 @@ def load_dataset():
     y_test = load_mnist_labels('t10k-labels-idx1-ubyte.gz')
 
     # We reserve the last 10000 training examples for validation.
-    X_train, X_val = X_train[:-10000], X_train[-10000:]
-    y_train, y_val = y_train[:-10000], y_train[-10000:]
+    X_train, X_val = X_train[:10000], X_train[-10000:]
+    y_train, y_val = y_train[:10000], y_train[-10000:]
 
     X_train_text = create_word_vectors(y_train)
     X_val_text = create_word_vectors(y_val)
@@ -154,7 +155,6 @@ def build_generator(input_noise=None, input_text=None):
 def build_discriminator(input_img=None, input_text=None):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
                                 DenseLayer, batch_norm, ConcatLayer)
-    from lasagne.layers.dnn import Conv2DDNNLayer as Conv2DLayer  # override
     from lasagne.nonlinearities import LeakyRectify, sigmoid
     lrelu = LeakyRectify(0.2)
     # input: (None, 1, 28, 28)
@@ -223,13 +223,14 @@ def main(num_epochs=200, loss_func=0, initial_eta=2e-4):
     discriminator = build_discriminator(input_img, input_text)
 
     all_layers = lasagne.layers.get_all_layers(discriminator)
-    print "LAYERS: ", all_layers
+    print ("LAYERS: ")
+    print (all_layers)
 
     # Create expression for passing real data through the discriminator
     real_out = lasagne.layers.get_output(discriminator)
     # Create expression for passing fake data through the discriminator
     fake_out = lasagne.layers.get_output(discriminator,
-            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[2]: input_text})
+            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[8]: input_text})
 
     # Create loss expressions
     generator_loss = None
