@@ -212,7 +212,7 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     input_text = T.dtensor3('t')
 
     gen = gen_model(input_noise, input_text, tanh_flag, layer_list)
-    disc = disc_model(input_image, input_text)
+    disc = disc_model(input_image, input_text, layer_list)
 
     real_img_val = lasagne.layers.get_output(disc)
 
