@@ -84,9 +84,14 @@ def disc_model(input_img, input_text, layer_list):
     lrelu = LeakyRectify(0.1)
     
     input_dis = InputLayer(shape=(None, 3, 128,128), input_var=input_img)
-    input_dis = ReshapeLayer(text_input_dis, ([0], 3*128*128))
+    text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
 
-    zeroth_hidden_layer = batch_norm(DenseLayer(input_dis, layer_list[7], nonlinearity=lrelu))
+    input_dis = ReshapeLayer(text_input_dis, ([0], 3*128*128))
+    text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
+
+    main_first_layer = ConcatLayer([input_dis, text_input_dis], axis=1)
+
+    zeroth_hidden_layer = batch_norm(DenseLayer(main_first_layer, layer_list[7], nonlinearity=lrelu))
     zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.35)
 
     first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, layer_list[6], nonlinearity=lrelu))
@@ -98,12 +103,6 @@ def disc_model(input_img, input_text, layer_list):
     third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, layer_list[4], nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.35)
     
-    #add noise
-    text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
-    text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
-
-    third_hidden_layer = ConcatLayer([third_hidden_layer, text_input_dis], axis=1)
-    
     fourth_hidden_layer = batch_norm(DenseLayer(third_hidden_layer, layer_list[3], nonlinearity=lrelu))
     fourth_hidden_layer = DropoutLayer(fourth_hidden_layer, p=0.35)
     
@@ -113,7 +112,10 @@ def disc_model(input_img, input_text, layer_list):
     sixth_hidden_layer = batch_norm(DenseLayer(fifth_hidden_layer, layer_list[1], nonlinearity=lrelu))
     sixth_hidden_layer = DropoutLayer(sixth_hidden_layer, p=0.35)
     
-    seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=sigmoid))
+    seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[0], nonlinearity=lrelu))
+    seventh_hidden_layer = DropoutLayer(seventh_hidden_layer, p=0.35)
+    
+    final_output_dis = DenseLayer(seventh_hidden_layer, 2 , nonlinearity=sigmoid)
     
     return final_output_dis
 
@@ -148,13 +150,18 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
     sixth_hidden_layer = batch_norm(DenseLayer(fifth_hidden_layer, layer_list[6], nonlinearity=lrelu))
     sixth_hidden_layer = DropoutLayer(sixth_hidden_layer, p=0.35)
     
-    seventh_hidden_layer = None
-    if tanh_flag==0:
-        seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=tanh))
-    else:
-        seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=sigmoid))
+    seventh_hidden_layer = batch_norm(DenseLayer(sixth_hidden_layer, layer_list[7], nonlinearity=lrelu))
+    seventh_hidden_layer = DropoutLayer(seventh_hidden_layer, p=0.35)
     
-    return seventh_hidden_layer
+    final_output_gen = None
+    if tanh_flag==0:
+        final_output_gen = DenseLayer(seventh_hidden_layer, 3*128*128, nonlinearity=tanh)
+    else:
+        final_output_gen = DenseLayer(seventh_hidden_layer, 3*128*128, nonlinearity=sigmoid)
+    
+    final_output_gen = ReshapeLayer(final_output_gen, ([0], layer_list[0], 128, 128))
+    return final_output_gen
+
 
 def scaleTrain(arr):
 
@@ -232,7 +239,7 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     all_layers = lasagne.layers.get_all_layers(disc)
     # print all_layers
     # TODO CHECK
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[1]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
@@ -241,8 +248,8 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     gen_params = lasagne.layers.get_all_params(gen, trainable=True)
     disc_params = lasagne.layers.get_all_params(disc, trainable=True)
     
-    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1e-5)
-    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1e-5)
+    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1.5e-5)
+    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1.5e-5)
 
     train_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(real_img_val >= .5).mean(),
@@ -256,13 +263,13 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[1] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[1] : input_text}, deterministic=True) >= .5).mean()])
 
     test_disc_loss_fn = theano.function([input_image, input_noise, input_text],
-                               [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True), 0)).mean(),
-                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True),1)).mean()])
+                               [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[1]: input_text}, deterministic=True), 0)).mean(),
+                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[1]: input_text}, deterministic=True),1)).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
@@ -364,7 +371,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=52)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[1000,2000,3500,3000,4000,4500,5000,6000])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[4000,7500,10000,15000,20000,25000,30000,40000])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
