@@ -239,7 +239,7 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     all_layers = lasagne.layers.get_all_layers(disc)
     # print all_layers
     # TODO CHECK
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[1]: input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[2]: input_text})
 
     gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
     disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
@@ -263,13 +263,13 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[1] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[2] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[1] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[2] : input_text}, deterministic=True) >= .5).mean()])
 
     test_disc_loss_fn = theano.function([input_image, input_noise, input_text],
-                               [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[1]: input_text}, deterministic=True), 0)).mean(),
-                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[1]: input_text}, deterministic=True),1)).mean()])
+                               [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[2]: input_text}, deterministic=True), 0)).mean(),
+                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[2]: input_text}, deterministic=True),1)).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
@@ -371,7 +371,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=70)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[750,2000,5000,7500,10000,12500,20000,25000])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[1000,2000,5000,7500,10000,15000,20000,25000])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
