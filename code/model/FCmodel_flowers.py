@@ -24,9 +24,9 @@ def load_dataset(tanh_flag):
 
     #print test_img_raw
     
-    train_caption = np.load('/home/kruti/text2image/data/flowers/system_input_train.npy').item()
-    validate_caption = np.load('/home/kruti/text2image/data/flowers/system_input_validate.npy').item()
-    test_caption = np.load('/home/kruti/text2image/data/flowers/system_input_test.npy').item()
+    train_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
+    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
+    test_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 1 , 300))
@@ -159,20 +159,20 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
     else:
         final_output_gen = DenseLayer(seventh_hidden_layer, 3*128*128, nonlinearity=sigmoid)
     
-    final_output_gen = ReshapeLayer(final_output_gen, ([0], layer_list[0], 128, 128))
+    final_output_gen = ReshapeLayer(final_output_gen, ([0], 3, 128, 128))
     return final_output_gen
 
 
 def scaleTrain(arr):
 
     sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                     sz+=1
     dummy_arr = np.zeros((sz, 128, 128, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -338,27 +338,27 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
                 
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/kruti/text2image/data/flowers/run2/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run2/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run2/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run2/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run2/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run2/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr), tanh_flag))
                 im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/kruti/text2image/data/flowers/run2/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run2/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run2/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run2/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run2/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run2/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/kruti/text2image/data/flowers/run2/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run2/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run2/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run2/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run2/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run2/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
 
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/kruti/text2image/data/flowers/run2/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run2/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run2/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run2/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run2/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run2/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
             np.save('test_images_pixel_values_flowers.npy', img_dc)
 
@@ -368,7 +368,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--tanh_flag', required=True, type=int, default=0)
-    parser.add_argument('--num_epochs', required=False, type=int, default=52)
+    parser.add_argument('--num_epochs', required=False, type=int, default=65)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
     parser.add_argument('--layer_list', nargs='+', type=int, default=[4000,7500,10000,15000,20000,25000,30000,40000])
