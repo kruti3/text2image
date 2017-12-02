@@ -10,6 +10,7 @@ import theano
 import theano.tensor as T
 
 import lasagne
+from data_utils import *
 
 
 # ################## Download and prepare the MNIST dataset ##################
@@ -115,9 +116,9 @@ class Deconv2DLayer(lasagne.layers.Layer):
             conved += self.b.dimshuffle('x', 0, 'x', 'x')
         return self.nonlinearity(conved)
 
-def build_generator(input_noise=None, input_text=None):
+def build_generator(input_noise=None, input_text=None, layer_list, fclayer_list):
     from lasagne.layers import InputLayer, ReshapeLayer, DenseLayer, batch_norm, ConcatLayer
-    from lasagne.nonlinearities import sigmoid
+    from lasagne.nonlinearities import sigmoid, LeakyRectify
     
     lrelu = LeakyRectify(0.1)
 
@@ -148,7 +149,7 @@ def build_generator(input_noise=None, input_text=None):
     
     return fifth_conv_layer
 
-def build_discriminator(input_img=None, input_text=None):
+def build_discriminator(input_img=None, input_text=None, layer_list, fclayer_list):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
                                 DenseLayer, batch_norm, ConcatLayer)
     from lasagne.nonlinearities import LeakyRectify, sigmoid
@@ -253,10 +254,11 @@ def scaleActualRangeChanged(arr):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(num_epochs=200, loss_func=0, initial_eta=2e-4):
+def main(layer_list, fclayer_list, num_epochs, loss_func):
     # Load the dataset
+     initial_eta=2e-4
     print("Loading data...")
-    X_train, X_train_text, y_train, X_val, X_val_text, y_val, X_test, X_test_text, y_test = load_dataset()
+    X_train, X_train_text, X_val, X_val_text, X_test, X_test_text = load_dataset(1)
 
     # Prepare Theano variables for inputs and targets
     noise_var = T.dmatrix('noise')
@@ -266,8 +268,8 @@ def main(num_epochs=200, loss_func=0, initial_eta=2e-4):
 
     # Create neural network model
     print("Building model and compiling functions...")
-    generator = build_generator(noise_var, input_text)
-    discriminator = build_discriminator(input_img, input_text)
+    generator = build_generator(noise_var, input_text, layer_list, fclayer_list)
+    discriminator = build_discriminator(input_img, input_text, layer_list, fclayer_list)
 
     all_layers = lasagne.layers.get_all_layers(discriminator)
     print ("LAYERS: ")
@@ -378,14 +380,13 @@ def main(num_epochs=200, loss_func=0, initial_eta=2e-4):
 
 
 if __name__ == '__main__':
-    if ('--help' in sys.argv) or ('-h' in sys.argv):
-        print("Trains a DCGAN on MNIST using Lasagne.")
-        print("Usage: %s [EPOCHS]" % sys.argv[0])
-        print()
-        print("EPOCHS: number of training epochs to perform (default: 100)")
-    else:
-        kwargs = {}
-        if len(sys.argv) > 1:
-            kwargs['num_epochs'] = int(sys.argv[1])
-            kwargs['loss_func'] = int(sys.argv[2])
-main(**kwargs)
+    
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--layer_list', required=True, nargs='+', type=int, default=[32, 64, 128])
+    parser.add_argument('--fclayer_list', required=True, nargs='+', type=int, default=[750, 1500, 2500])
+    parser.add_argument('--num_epochs', required=False, type=int, default=1)
+    parser.add_argument('--loss_func', required=False, type=int, default=1)
+    args = parser.parse_args()
+    
+    main(layer_list=args.layer_list, fclayer_list=args.fclayer_list, num_epochs=args.num_epochs, loss_func=args.loss_func)
