@@ -232,7 +232,7 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     input_text = T.dtensor3('t')
 
     gen = gen_model(input_noise, input_text, tanh_flag, layer_list)
-    disc = disc_model(input_image, input_text)
+    disc = disc_model(input_image, input_text, layer_list)
 
     real_img_val = lasagne.layers.get_output(disc)
 
@@ -371,7 +371,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=70)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[2000,5000,7500,10000,15000,20000,25000,30000])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[2000,5000,7500,10000,15000,20000,27500,32000])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
