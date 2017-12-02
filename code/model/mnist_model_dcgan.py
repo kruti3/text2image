@@ -154,7 +154,6 @@ def build_generator(input_noise=None, input_text=None):
 def build_discriminator(input_img=None, input_text=None):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
                                 DenseLayer, batch_norm, ConcatLayer)
-    from lasagne.layers.dnn import Conv2DDNNLayer as Conv2DLayer  # override
     from lasagne.nonlinearities import LeakyRectify, sigmoid
     lrelu = LeakyRectify(0.2)
     # input: (None, 1, 28, 28)
