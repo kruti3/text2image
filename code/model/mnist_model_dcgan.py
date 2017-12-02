@@ -17,17 +17,18 @@ import lasagne
 # and loading it into numpy arrays. It doesn't involve Lasagne at all.
 
 
-word2vec = np.load('/home/utkarsh1404/project/text2image/data/digits/word2vec_digits.npy').item()
+word2vec = np.load('/home/kruti/text2image/data/digits/word2vec_digits.npy').item()
 
-samples_text = np.array((42,1,300))
+samples_text = np.zeros((42,1,300))
 for i in range(42):
     k = (i/4)%10
-    sampled_text[i] = word2vec[str(k)]
+    print (word2vec[str(k)].shape)
+    samples_text[i] = np.reshape(np.array(word2vec[str(k)]),(1,300))
 
 def create_word_vectors(l):
     ar = np.zeros((len(l),1,300))
     for id in range(len(l)):
-        ar[id] = np.reshape(word2vec[str(l[id])], (1,300))
+        ar[id] = np.reshape(np.array(word2vec[str(l[id])]),(1,300))
     return ar  
 
 
@@ -222,13 +223,14 @@ def main(num_epochs=200, loss_func=0, initial_eta=2e-4):
     discriminator = build_discriminator(input_img, input_text)
 
     all_layers = lasagne.layers.get_all_layers(discriminator)
-    print "LAYERS: ", all_layers
+    print ("LAYERS: ")
+    print (all_layers)
 
     # Create expression for passing real data through the discriminator
     real_out = lasagne.layers.get_output(discriminator)
     # Create expression for passing fake data through the discriminator
     fake_out = lasagne.layers.get_output(discriminator,
-            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[2]: input_text})
+            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[8]: input_text})
 
     # Create loss expressions
     generator_loss = None
