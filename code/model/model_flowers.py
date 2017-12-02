@@ -19,24 +19,27 @@ imageIdToCaptionVectorDict = {}
 X_train_img, X_train_caption, X_val_img, X_val_caption, X_test_img, X_test_caption = None, None, None, None, None, None
 
 
+pixelSz = 32
+
+
 def load_dataset(tanh_flag):
     train_img_raw, val_img_raw, test_img_raw = imgtobin_flowers(tanh_flag)
 
     #print test_img_raw
     
-    train_caption = np.load('/home/kruti/text2image/data/flowers/system_input_train.npy').item()
-    validate_caption = np.load('/home/kruti/text2image/data/flowers/system_input_validate.npy').item()
-    test_caption = np.load('/home/kruti/text2image/data/flowers/system_input_test.npy').item()
+    train_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
+    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
+    test_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
 
     train_sz = len(train_caption)
     X_train_caption_lcl = np.zeros((train_sz, 1 , 300))
-    X_train_img_lcl = np.zeros((train_sz, 3 , 128, 128))
+    X_train_img_lcl = np.zeros((train_sz, 3 , pixelSz, pixelSz))
     validate_sz = len(validate_caption)
     X_val_caption_lcl = np.zeros((validate_sz, 1 , 300))
-    X_val_img_lcl = np.zeros((validate_sz, 3 , 128, 128))
+    X_val_img_lcl = np.zeros((validate_sz, 3 , pixelSz, pixelSz))
     test_sz = len(test_caption)
     X_test_caption_lcl = np.zeros((test_sz, 1 , 300))
-    X_test_img_lcl = np.zeros((test_sz, 3 , 128, 128))
+    X_test_img_lcl = np.zeros((test_sz, 3 , pixelSz, pixelSz))
     
     global_ctr = 0
     counter = 0
@@ -83,24 +86,24 @@ def disc_model(input_img, input_text, layer_list):
     # disc layer description
     lrelu = LeakyRectify(0.1)
 
-    input_dis = InputLayer(shape = (None, 3, 128, 128), input_var = input_img)
+    input_dis = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
     frst_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
     second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
     third_conv_layer = batch_norm(Conv2DLayer(second_conv_layer, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
     fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
     fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
-    pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(pooled_fifth_conv_layer, ([0], layer_list[0]*64*64))
+    #pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
+    conv_dis_output = ReshapeLayer(fifth_conv_layer, ([0], layer_list[0]*pixelSz*pixelSz))
 
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 4500, nonlinearity=lrelu))
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, 2500, nonlinearity=lrelu))
     frst_hidden_layer = DropoutLayer(frst_hidden_layer, p=0.3)
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 2500, nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, 1500, nonlinearity=lrelu))
     second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
-    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 1500, nonlinearity=lrelu))
+    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, 750, nonlinearity=lrelu))
     third_hidden_layer = DropoutLayer(third_hidden_layer, p=0.3)
     final_output_dis = DenseLayer(third_hidden_layer, 2, nonlinearity = sigmoid)
 
@@ -116,17 +119,17 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 1500, nonlinearity=lrelu))
-    zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.15)
+    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, 750 , nonlinearity=lrelu))
+    zeroth_hidden_layer = DropoutLayer(zeroth_hidden_layer, p=0.3)
 
-    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 2500, nonlinearity=lrelu))
-    first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.15)
+    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, 1500, nonlinearity=lrelu))
+    first_hidden_layer = DropoutLayer(first_hidden_layer, p=0.3)
 
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 4500, nonlinearity=lrelu))
-    second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.15)
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, 2500, nonlinearity=lrelu))
+    second_hidden_layer = DropoutLayer(second_hidden_layer, p=0.3)
 
-    third_hidden_layer = DenseLayer(second_hidden_layer, layer_list[0]*128*128, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], layer_list[0], 128, 128))
+    third_hidden_layer = DenseLayer(second_hidden_layer, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
 
     first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, layer_list[1], 5, stride=1, crop=2, nonlinearity=lrelu))
     second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, layer_list[2], 5, stride=1, crop=2, nonlinearity=lrelu))
@@ -143,13 +146,13 @@ def gen_model(input_noise, input_text, tanh_flag, layer_list):
 def scaleTrain(arr):
 
     sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                     sz+=1
-    dummy_arr = np.zeros((sz, 128, 128, 3))
+    dummy_arr = np.zeros((sz, pixelSz, pixelSz, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -216,17 +219,17 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
     all_layers = lasagne.layers.get_all_layers(disc)
     # print all_layers
     # TODO CHECK
-    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text})
+    fake_img_val = lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[17]: input_text})
 
-    gen_loss = lasagne.objectives.binary_crossentropy(fake_img_val, 1).mean()
-    disc_loss = (lasagne.objectives.binary_crossentropy(real_img_val, 1)
-            + lasagne.objectives.binary_crossentropy(fake_img_val, 0)).mean()
+    gen_loss = lasagne.objectives.squared_error(fake_img_val, 1).mean()
+    disc_loss = (lasagne.objectives.squared_error(real_img_val, 1)
+            + lasagne.objectives.squared_error(fake_img_val, 0)).mean()
     
     gen_params = lasagne.layers.get_all_params(gen, trainable=True)
     disc_params = lasagne.layers.get_all_params(disc, trainable=True)
     
-    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1e-5)
-    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1e-5)
+    update_gen = lasagne.updates.adam(gen_loss, gen_params, learning_rate=1.5e-5)
+    update_disc = lasagne.updates.adam(disc_loss, disc_params, learning_rate=1.5e-5)
 
     train_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(real_img_val >= .5).mean(),
@@ -240,13 +243,13 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
 
     test_disc_fn = theano.function([input_image, input_noise, input_text],
                                [(lasagne.layers.get_output(disc, deterministic=True) >= .5).mean(),
-                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) < .5).mean()])
+                                (lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[17] : input_text}, deterministic=True) < .5).mean()])
     test_gen_fn = theano.function([input_noise, input_text],
-                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[18] : input_text}, deterministic=True) >= .5).mean()])
+                               [(lasagne.layers.get_output(disc, {all_layers[0] : lasagne.layers.get_output(gen, deterministic=True), all_layers[17] : input_text}, deterministic=True) >= .5).mean()])
 
     test_disc_loss_fn = theano.function([input_image, input_noise, input_text],
-                               [(lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True), 0)).mean(),
-                                (lasagne.objectives.binary_crossentropy(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[18]: input_text}, deterministic=True),1)).mean()])
+                               [(lasagne.objectives.squared_error(lasagne.layers.get_output(disc, deterministic=True), 1) + lasagne.objectives.squared_error(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[17]: input_text}, deterministic=True), 0)).mean(),
+                                (lasagne.objectives.squared_error(lasagne.layers.get_output(disc, {all_layers[0]: lasagne.layers.get_output(gen), all_layers[17]: input_text}, deterministic=True),1)).mean()])
     
     test_gen_fn_samples = theano.function([input_noise, input_text],
                                 lasagne.layers.get_output(gen, deterministic=True))
@@ -315,27 +318,27 @@ def train_network(tanh_flag, layer_list, num_epochs, batch_size, num_iters_inner
                 
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/kruti/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/1/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/2/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr), tanh_flag))
                 im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/kruti/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/3/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/4/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/kruti/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/5/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/6/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
 
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/kruti/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
-                img = Image.open("/home/kruti/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
-                img.save("/home/kruti/text2image/data/flowers/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
+                img = Image.open("/home/utkarsh1404/project/text2image/data/flowers/run1/7/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x]).convert('L')
+                img.save("/home/utkarsh1404/project/text2image/data/flowers/run1/8/"+imageIdToNameDict[X_train_img.shape[0]+X_val_img.shape[0]+x])
                 
             np.save('test_images_pixel_values_flowers.npy', img_dc)
 

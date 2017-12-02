@@ -2,6 +2,9 @@ import numpy as np
 import os
 from PIL import Image
 
+
+pixelSz = 32
+
 def imgtobin_dogs(tanh_flag):
     
     if tanh_flag==0:
@@ -15,7 +18,7 @@ def imgtobin_dogs(tanh_flag):
                 if filename.endswith('.jpg'):
                     sz+=1
 
-        dummy_arr = np.zeros((sz, 128, 128, 3))
+        dummy_arr = np.zeros((sz, pixelSz, pixelSz, 3))
         ct=0
         for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/dogs/samplesResized/train'):
             for filename in filenames:
@@ -189,7 +192,7 @@ def imgtobin_flowers(tanh_flag):
                 if filename.endswith('.jpg'):
                     sz+=1
 
-        dummy_arr = np.zeros((sz, 128, 128, 3))
+        dummy_arr = np.zeros((sz, pixelSz, pixelSz, 3))
         ct=0
         for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
             for filename in filenames:
