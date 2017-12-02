@@ -16,6 +16,21 @@ import lasagne
 # This is just some way of getting the MNIST dataset from an online location
 # and loading it into numpy arrays. It doesn't involve Lasagne at all.
 
+
+word2vec = np.load('/home/utkarsh1404/project/text2image/data/digits/word2vec_digits.npy').item()
+
+samples_text = np.array((42,1,300))
+for i in range(42):
+    k = (i/4)%10
+    sampled_text[i] = word2vec[str(k)]
+
+def create_word_vectors(l):
+    ar = np.zeros((len(l),1,300))
+    for id in range(len(l)):
+        ar[id] = np.reshape(word2vec[str(l[id])], (1,300))
+    return ar  
+
+
 def load_dataset():
     # We first define a download function, supporting both Python 2 and 3.
     if sys.version_info[0] == 2:
@@ -64,9 +79,13 @@ def load_dataset():
     X_train, X_val = X_train[:-10000], X_train[-10000:]
     y_train, y_val = y_train[:-10000], y_train[-10000:]
 
+    X_train_text = create_word_vectors(y_train)
+    X_val_text = create_word_vectors(y_val)
+    X_test_text= create_word_vectors(y_test)
+
     # We just return all the arrays in order, as expected in main().
     # (It doesn't matter how we do this as long as we can read them again.)
-    return X_train, y_train, X_val, y_val, X_test, y_test
+    return X_train, X_train_text, y_train, X_val, X_val_text, y_val, X_test, X_test_text, y_test
 
 
 # ##################### Build the neural network model #######################
@@ -110,11 +129,16 @@ class Deconv2DLayer(lasagne.layers.Layer):
             conved += self.b.dimshuffle('x', 0, 'x', 'x')
         return self.nonlinearity(conved)
 
-def build_generator(input_var=None):
-    from lasagne.layers import InputLayer, ReshapeLayer, DenseLayer, batch_norm
+def build_generator(input_noise=None, input_text=None):
+    from lasagne.layers import InputLayer, ReshapeLayer, DenseLayer, batch_norm, ConcatLayer
     from lasagne.nonlinearities import sigmoid
     # input: 100dim
-    layer = InputLayer(shape=(None, 100), input_var=input_var)
+    layer = InputLayer(shape=(None, 100), input_var=input_noise)
+    layer2 = InputLayer(shape=(None,1,300), input_var=input_text)
+    layer2 = ReshapeLayer(layer2, ([0], 1*300))
+
+
+    layer = ConcatLayer([layer, layer2], axis=1)
     # fully-connected layer
     layer = batch_norm(DenseLayer(layer, 1024))
     # project and reshape
@@ -127,18 +151,27 @@ def build_generator(input_var=None):
     print ("Generator output:", layer.output_shape)
     return layer
 
-def build_discriminator(input_var=None):
+def build_discriminator(input_img=None, input_text=None):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
-                                DenseLayer, batch_norm)
+                                DenseLayer, batch_norm, ConcatLayer)
     from lasagne.layers.dnn import Conv2DDNNLayer as Conv2DLayer  # override
     from lasagne.nonlinearities import LeakyRectify, sigmoid
     lrelu = LeakyRectify(0.2)
     # input: (None, 1, 28, 28)
-    layer = InputLayer(shape=(None, 1, 28, 28), input_var=input_var)
+    layer = InputLayer(shape=(None, 1, 28, 28), input_var=input_img)
+
+    layer2 = InputLayer(shape=(None,1,300), input_var=input_text)
+    layer2 = ReshapeLayer(layer2, ([0], 1*300))
+
+
     # two convolutions
     layer = batch_norm(Conv2DLayer(layer, 64, 5, stride=2, pad=2, nonlinearity=lrelu))
     layer = batch_norm(Conv2DLayer(layer, 128, 5, stride=2, pad=2, nonlinearity=lrelu))
     # fully-connected layer
+
+    layer = ReshapeLayer(layer, ([0], 128*7*7))
+    layer = ConcatLayer([layer, layer2], axis=1)
+
     layer = batch_norm(DenseLayer(layer, 1024, nonlinearity=lrelu))
     # output layer
     layer = DenseLayer(layer, 1, nonlinearity=sigmoid)
@@ -155,7 +188,7 @@ def build_discriminator(input_var=None):
 # them to GPU at once for slightly improved performance. This would involve
 # several changes in the main program, though, and is not demonstrated here.
 
-def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
+def iterate_minibatches(inputs, text, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
     if shuffle:
         indices = np.arange(len(inputs))
@@ -165,7 +198,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
             excerpt = indices[start_idx:start_idx + batchsize]
         else:
             excerpt = slice(start_idx, start_idx + batchsize)
-        yield inputs[excerpt], targets[excerpt]
+        yield inputs[excerpt], text[excerpt], targets[excerpt]
 
 
 # ############################## Main program ################################
@@ -173,31 +206,41 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(num_epochs=200, initial_eta=2e-4):
+def main(num_epochs=200, loss_func=0, initial_eta=2e-4):
     # Load the dataset
     print("Loading data...")
-    X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+    X_train, X_train_text, y_train, X_val, X_val_text, y_val, X_test, X_test_text, y_test = load_dataset()
 
     # Prepare Theano variables for inputs and targets
-    noise_var = T.matrix('noise')
-    input_var = T.tensor4('inputs')
+    noise_var = T.dmatrix('noise')
+    input_img = T.dtensor4('inputs')
+    input_text = T.dtensor3('text')
 #    target_var = T.ivector('targets')
 
     # Create neural network model
     print("Building model and compiling functions...")
-    generator = build_generator(noise_var)
-    discriminator = build_discriminator(input_var)
+    generator = build_generator(noise_var, input_text)
+    discriminator = build_discriminator(input_img, input_text)
+
+    all_layers = lasagne.layers.get_all_layers(discriminator)
+    print "LAYERS: ", all_layers
 
     # Create expression for passing real data through the discriminator
     real_out = lasagne.layers.get_output(discriminator)
     # Create expression for passing fake data through the discriminator
     fake_out = lasagne.layers.get_output(discriminator,
-            lasagne.layers.get_output(generator))
-    
+            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[2]: input_text})
+
     # Create loss expressions
-    generator_loss = lasagne.objectives.binary_crossentropy(fake_out, 1).mean()
-    discriminator_loss = (lasagne.objectives.binary_crossentropy(real_out, 1)
-            + lasagne.objectives.binary_crossentropy(fake_out, 0)).mean()
+    generator_loss = None
+    discriminator_loss = None
+
+    if loss_func==0:
+        generator_loss = lasagne.objectives.squared_error(fake_out, 1).mean()
+        discriminator_loss = (lasagne.objectives.squared_error(real_out, 1) + lasagne.objectives.squared_error(fake_out, 0)).mean()
+    else:
+        generator_loss = lasagne.objectives.binary_crossentropy(fake_out, 1).mean()
+        discriminator_loss = (lasagne.objectives.binary_crossentropy(real_out, 1) + lasagne.objectives.binary_crossentropy(fake_out, 0)).mean()
     
     # Create update expressions for training
     generator_params = lasagne.layers.get_all_params(generator, trainable=True)
@@ -210,13 +253,13 @@ def main(num_epochs=200, initial_eta=2e-4):
 
     # Compile a function performing a training step on a mini-batch (by giving
     # the updates dictionary) and returning the corresponding training loss:
-    train_fn = theano.function([noise_var, input_var],
+    train_fn = theano.function([noise_var, input_img, input_text],
                                [(real_out > .5).mean(),
                                 (fake_out < .5).mean()],
                                updates=updates)
 
     # Compile another function generating some data
-    gen_fn = theano.function([noise_var],
+    gen_fn = theano.function([noise_var, input_text],
                              lasagne.layers.get_output(generator,
                                                        deterministic=True))
 
@@ -228,10 +271,10 @@ def main(num_epochs=200, initial_eta=2e-4):
         train_err = 0
         train_batches = 0
         start_time = time.time()
-        for batch in iterate_minibatches(X_train, y_train, 128, shuffle=True):
-            inputs, targets = batch
+        for batch in iterate_minibatches(X_train, X_train_text, y_train, 128, shuffle=True):
+            inputs, text, targets = batch
             noise = lasagne.utils.floatX(np.random.rand(len(inputs), 100))
-            train_err += np.array(train_fn(noise, inputs))
+            train_err += np.array(train_fn(noise, inputs, text))
             train_batches += 1
 
         # Then we print the results for this epoch:
@@ -240,7 +283,7 @@ def main(num_epochs=200, initial_eta=2e-4):
         print("  training loss:\t\t{}".format(train_err / train_batches))
 
         # And finally, we plot some generated data
-        samples = gen_fn(lasagne.utils.floatX(np.random.rand(42, 100)))
+        samples = gen_fn(lasagne.utils.floatX(np.random.rand(42, 100)), samples_text)
         try:
             import matplotlib.pyplot as plt
         except ImportError:
@@ -258,8 +301,8 @@ def main(num_epochs=200, initial_eta=2e-4):
             eta.set_value(lasagne.utils.floatX(initial_eta*2*(1 - progress)))
 
     # Optionally, you could now dump the network weights to a file like this:
-    np.savez('mnist_gen.npz', *lasagne.layers.get_all_param_values(generator))
-    np.savez('mnist_disc.npz', *lasagne.layers.get_all_param_values(discriminator))
+    #np.savez('mnist_gen.npz', *lasagne.layers.get_all_param_values(generator))
+    #np.savez('mnist_disc.npz', *lasagne.layers.get_all_param_values(discriminator))
     #
     # And load them again later on like this:
     # with np.load('model.npz') as f:
@@ -277,4 +320,5 @@ if __name__ == '__main__':
         kwargs = {}
         if len(sys.argv) > 1:
             kwargs['num_epochs'] = int(sys.argv[1])
+            kwargs['loss_func'] = int(sys.argv[2])
 main(**kwargs)
