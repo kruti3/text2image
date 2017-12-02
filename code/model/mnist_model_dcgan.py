@@ -77,8 +77,8 @@ def load_dataset():
     y_test = load_mnist_labels('t10k-labels-idx1-ubyte.gz')
 
     # We reserve the last 10000 training examples for validation.
-    X_train, X_val = X_train[:-10000], X_train[-10000:]
-    y_train, y_val = y_train[:-10000], y_train[-10000:]
+    X_train, X_val = X_train[:10000], X_train[-10000:]
+    y_train, y_val = y_train[:10000], y_train[-10000:]
 
     X_train_text = create_word_vectors(y_train)
     X_val_text = create_word_vectors(y_val)
