@@ -86,7 +86,7 @@ def disc_model(input_img, input_text, layer_list):
     input_dis = InputLayer(shape=(None, 3, 128,128), input_var=input_img)
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
 
-    input_dis = ReshapeLayer(text_input_dis, ([0], 3*128*128))
+    input_dis = ReshapeLayer(input_dis, ([0], 3*128*128))
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     main_first_layer = ConcatLayer([input_dis, text_input_dis], axis=1)
