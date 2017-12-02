@@ -371,7 +371,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_epochs', required=False, type=int, default=70)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[2000,5000,7500,10000,15000,20000,27500,32000])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[750,2000,5000,7500,10000,12500,20000,25000])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
