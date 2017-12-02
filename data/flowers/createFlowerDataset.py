@@ -30,12 +30,16 @@ print len(fileNames)
 ct=0
 for filename in fileNames:
     #print fileName
-    if 'image_05399.jpg'  in filename or 'image_04481.jpg'  in filename or labels[ct] in storelabel:
+    if 'image_05399.jpg'  in filename or 'image_04481.jpg'  in filename or 'image_01314.jpg'  in filename or 'image_01696.jpg'  in filename or labels[ct] in storelabel:
         storelabel.append(labels[ct])
         if '05399' in filename: 
             print labels[ct], "=", "sunflower"
         elif '04481' in filename:
             print labels[ct], "=", "garbanza"
+        elif '01696' in filename:
+            print labels[ct], "=", "hibiscus"
+        elif '01314' in filename:
+            print labels[ct], "=", "petunia"
         fileNameToLabel[filename] = str(labels[ct])
     ct+=1
 
@@ -48,6 +52,8 @@ print set(storelabel)
 d = {}
 d['54'] = 'sunflower'
 d['71'] = 'gazania'
+d['51'] = 'petunia'
+d['83'] = 'hibiscus'
 
 
 
