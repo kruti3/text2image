@@ -116,7 +116,7 @@ class Deconv2DLayer(lasagne.layers.Layer):
             conved += self.b.dimshuffle('x', 0, 'x', 'x')
         return self.nonlinearity(conved)
 
-def build_generator(input_noise=None, input_text=None, layer_list, fclayer_list):
+def build_generator(input_noise, input_text, layer_list, fclayer_list):
     from lasagne.layers import InputLayer, ReshapeLayer, DenseLayer, batch_norm, ConcatLayer
     from lasagne.nonlinearities import sigmoid, LeakyRectify
     
@@ -149,7 +149,7 @@ def build_generator(input_noise=None, input_text=None, layer_list, fclayer_list)
     
     return fifth_conv_layer
 
-def build_discriminator(input_img=None, input_text=None, layer_list, fclayer_list):
+def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
                                 DenseLayer, batch_norm, ConcatLayer)
     from lasagne.nonlinearities import LeakyRectify, sigmoid
@@ -256,7 +256,7 @@ def scaleActualRangeChanged(arr):
 
 def main(layer_list, fclayer_list, num_epochs, loss_func):
     # Load the dataset
-     initial_eta=2e-4
+    initial_eta=2e-4
     print("Loading data...")
     X_train, X_train_text, X_val, X_val_text, X_test, X_test_text = load_dataset(1)
 
