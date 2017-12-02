@@ -368,10 +368,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--tanh_flag', required=True, type=int, default=0)
-    parser.add_argument('--num_epochs', required=False, type=int, default=65)
+    parser.add_argument('--num_epochs', required=False, type=int, default=70)
     parser.add_argument('--batch_size', required=False, type=int, default=90)
     parser.add_argument('--num_iters_inner', required=False, type=int, default=1)
-    parser.add_argument('--layer_list', nargs='+', type=int, default=[4000,7500,10000,15000,20000,25000,30000,40000])
+    parser.add_argument('--layer_list', nargs='+', type=int, default=[2000,5000,7500,10000,15000,20000,25000,30000])
     args = parser.parse_args()
     
     num_layers = list(args.layer_list)
