@@ -31,9 +31,9 @@ def load_dataset(tanh_flag):
 
     #print test_img_raw
     
-    train_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
-    validate_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
-    test_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
+    train_text = np.load('/home/kruti/text2image/data/flowers/system_input_train.npy').item()
+    validate_text = np.load('/home/kruti/text2image/data/flowers/system_input_validate.npy').item()
+    test_text = np.load('/home/kruti/text2image/data/flowers/system_input_test.npy').item()
 
     train_sz = len(train_text)
     X_train_text_lcl = np.zeros((train_sz, 1 , 300))
@@ -183,10 +183,7 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
 # several changes in the main program, though, and is not demonstrated here.
 
 def iterate_minibatches(inputs, text, batchsize, shuffle=False):
-<<<<<<< HEAD
     assert len(inputs) == len(text)
-=======
->>>>>>> b092b866b830e12c2c6991016d8d6bce9298a4b5
     if shuffle:
         indices = np.arange(len(inputs))
         np.random.shuffle(indices)
@@ -199,13 +196,13 @@ def iterate_minibatches(inputs, text, batchsize, shuffle=False):
 
 def scaleTrain(arr):
     sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                     sz+=1
     dummy_arr = np.zeros((sz, pixelSz, pixelSz, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -352,23 +349,23 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
                 
                 arr0 = np.copy(arr)
                 im = Image.fromarray(np.uint8(arr0))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/0/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/kruti/text2image/data/flowers/run3/0/"+str(epoch)+imageIdToNameDict[offset+x])
                 
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/1/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/kruti/text2image/data/flowers/run3/1/"+str(epoch)+imageIdToNameDict[offset+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/2/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/kruti/text2image/data/flowers/run3/2/"+str(epoch)+imageIdToNameDict[offset+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/3/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/kruti/text2image/data/flowers/run3/3/"+str(epoch)+imageIdToNameDict[offset+x])
                
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/4/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/kruti/text2image/data/flowers/run3/4/"+str(epoch)+imageIdToNameDict[offset+x])
                 
 
         # After half the epochs, we start decaying the learn rate towards zero
