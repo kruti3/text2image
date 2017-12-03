@@ -346,9 +346,9 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
             pass
         else:
             plt.imsave('flower_samples.png',
-                       (samples.reshape(25, 8, 32, 32)
+                       (samples.reshape(4, 2, 32, 32)
                                .transpose(0, 2, 1, 3)
-                               .reshape(25*32, 8*32)),
+                               .reshape(4*32, 2*32)),
                        cmap='gray')
                 
 
