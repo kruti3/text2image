@@ -25,6 +25,8 @@ X_train, X_train_text, X_val, X_val_text, X_test, X_test_text = None, None, None
 
 pixelSz = 32
 
+vals = [1,100,182,227,394,395,469,470]
+trial = np.zeros((8,1,300))
 
 def load_dataset(tanh_flag):
     train_img_raw, val_img_raw, test_img_raw = imgtobin_flowers(tanh_flag)
@@ -37,13 +39,13 @@ def load_dataset(tanh_flag):
 
     train_sz = len(train_text)
     X_train_text_lcl = np.zeros((train_sz, 1 , 300))
-    X_train_img_lcl = np.zeros((train_sz, 3 , pixelSz, pixelSz))
+    X_train_img_lcl = np.zeros((train_sz, 1 , pixelSz, pixelSz))
     validate_sz = len(validate_text)
     X_val_text_lcl = np.zeros((validate_sz, 1 , 300))
-    X_val_img_lcl = np.zeros((validate_sz, 3 , pixelSz, pixelSz))
+    X_val_img_lcl = np.zeros((validate_sz, 1 , pixelSz, pixelSz))
     test_sz = len(test_text)
     X_test_text_lcl = np.zeros((test_sz, 1 , 300))
-    X_test_img_lcl = np.zeros((test_sz, 3 , pixelSz, pixelSz))
+    X_test_img_lcl = np.zeros((test_sz, 1 , pixelSz, pixelSz))
     
     global_ctr = 0
     counter = 0
@@ -51,7 +53,7 @@ def load_dataset(tanh_flag):
         imageIdToNameDict[global_ctr] = key
         imageIdToCaptionVectorDict[global_ctr] = train_text[key]
         X_train_text_lcl[counter] = train_text[key]
-        X_train_img_lcl[counter] = train_img_raw[key]
+        X_train_img_lcl[counter] = np.reshape(np.mean(train_img_raw[key],axis=0), (1,pixelSz, pixelSz))
         counter+=1
         global_ctr+=1
     counter = 0
@@ -59,17 +61,21 @@ def load_dataset(tanh_flag):
         imageIdToNameDict[global_ctr] = key
         imageIdToCaptionVectorDict[global_ctr] = validate_text[key]
         X_val_text_lcl[counter] = validate_text[key]
-        X_val_img_lcl[counter] = val_img_raw[key]
+        X_val_img_lcl[counter] = np.reshape(np.mean(val_img_raw[key],axis=0), (1,pixelSz, pixelSz))
         counter+=1
         global_ctr+=1
     counter = 0
+    tr=0
     for key in test_text:
         imageIdToNameDict[global_ctr] = key
         imageIdToCaptionVectorDict[global_ctr] = test_text[key]
         X_test_text_lcl[counter] = test_text[key]
-        X_test_img_lcl[counter] = test_img_raw[key]
+        X_test_img_lcl[counter] = np.reshape(np.mean(test_img_raw[key],axis=0), (1,pixelSz, pixelSz))
         counter+=1
         global_ctr+=1
+        if counter in vals:
+            trial[tr] = np.copy(test_text[key])
+            tr+=1
 
     
     return X_train_img_lcl, X_train_text_lcl, X_val_img_lcl, X_val_text_lcl, X_test_img_lcl, X_test_text_lcl
@@ -128,18 +134,22 @@ def build_generator(input_noise, input_text, layer_list, fclayer_list):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    for i in range(len(fclayer_list)):
-        input_gen = batch_norm(DenseLayer(input_gen, fclayer_list[i] , nonlinearity=lrelu))
-    
-    interm_hidden_layer = DenseLayer(input_gen, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
-    ithconv_layer = ReshapeLayer(interm_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
+    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, fclayer_list[0] , nonlinearity=lrelu))
+   
+    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, fclayer_list[1], nonlinearity=lrelu))
+   
+    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, fclayer_list[2], nonlinearity=lrelu))
+   
+    third_hidden_layer = DenseLayer(second_hidden_layer, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
+    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
 
-    for i in range(1, len(layer_list), 1):
-        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
+    #third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, layer_list[3], 5, stride=1, crop=2, nonlinearity=lrelu))
+    #fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, layer_list[4], 5, stride=1, crop=2, nonlinearity=lrelu))
+    fifth_conv_layer = Deconv2DLayer(second_conv_layer, 1, 5, stride=1, pad=2, nonlinearity=sigmoid)
     
-    ithconv_layer = Deconv2DLayer(ithconv_layer, 3, 5, stride=1, pad=2, nonlinearity=sigmoid)
-    
-    return ithconv_layer
+    return fifth_conv_layer
 
 def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
@@ -148,28 +158,23 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     lrelu = LeakyRectify(0.2)
     # input: (None, 3, 28, 28)
 
-    ithconv_layer = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
-    
-    for i in range(len(layer_list)-1, -1, -1):
-        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=lrelu))
-    
+    input_dis = InputLayer(shape = (None, 1, pixelSz, pixelSz), input_var = input_img)
     #frst_conv_layer =  batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
     #second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
-    #third_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
-    #fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
-    #fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
+    third_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
+    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
     #pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(ithconv_layer, ([0], layer_list[0]*pixelSz*pixelSz))
+    conv_dis_output = ReshapeLayer(fifth_conv_layer, ([0], layer_list[0]*pixelSz*pixelSz))
 
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    
-    for i in range(len(fclayer_list)-1, -1, -1):
-        input_fc_dis = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=lrelu))
-    
-    final_output_dis = DenseLayer(input_fc_dis, 1, nonlinearity = sigmoid)
+    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=lrelu))
+    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, fclayer_list[1], nonlinearity=lrelu))
+    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, fclayer_list[0], nonlinearity=lrelu))
+    final_output_dis = DenseLayer(third_hidden_layer, 1, nonlinearity = sigmoid)
 
     return final_output_dis
 
@@ -183,10 +188,6 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
 # several changes in the main program, though, and is not demonstrated here.
 
 def iterate_minibatches(inputs, text, batchsize, shuffle=False):
-<<<<<<< HEAD
-    assert len(inputs) == len(text)
-=======
->>>>>>> b092b866b830e12c2c6991016d8d6bce9298a4b5
     if shuffle:
         indices = np.arange(len(inputs))
         np.random.shuffle(indices)
@@ -197,6 +198,7 @@ def iterate_minibatches(inputs, text, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield inputs[excerpt], text[excerpt]
 
+'''
 def scaleTrain(arr):
     sz = 0
     for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
@@ -256,6 +258,7 @@ def scaleRange(arr):
 # Everything else will be handled in our main program now. We could pull out
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
+'''
 
 def main(layer_list, fclayer_list, num_epochs, loss_func):
     # Load the dataset
@@ -336,39 +339,17 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         print("  training loss:\t\t{}".format(train_err / train_batches))
 
         # And finally, we plot some generated data
-        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(X_test_text.shape[0], 50)), X_test_text))
+        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(8, 50)), trial))
         try:
             import matplotlib.pyplot as plt
         except ImportError:
             pass
         else:
-            img_dc = {}
-            offset = X_train.shape[0]+X_val.shape[0]
-            for x in range(samples.shape[0]):
-                img_dc[imageIdToNameDict[offset+x]] = np.array(samples[x])
-                arr = samples[x]
-                c, w, h = arr.shape
-                arr = np.reshape(arr, (w, h, c))
-                
-                arr0 = np.copy(arr)
-                im = Image.fromarray(np.uint8(arr0))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/0/"+str(epoch)+imageIdToNameDict[offset+x])
-                
-                arr1 = np.asarray(scaleTrain(np.copy(arr)))
-                im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/1/"+str(epoch)+imageIdToNameDict[offset+x])
-                
-                arr2 = np.asarray(scaleRange(np.copy(arr)))
-                im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/2/"+str(epoch)+imageIdToNameDict[offset+x])
-                
-                arr3 = np.asarray(scaleActualRange(np.copy(arr)))
-                im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/3/"+str(epoch)+imageIdToNameDict[offset+x])
-               
-                arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
-                im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/4/"+str(epoch)+imageIdToNameDict[offset+x])
+            plt.imsave('flower_samples.png',
+                       (samples.reshape(4, 2, 32, 32)
+                               .transpose(0, 2, 1, 3)
+                               .reshape(4*32, 2*32)),
+                       cmap='gray')
                 
 
         # After half the epochs, we start decaying the learn rate towards zero
@@ -390,9 +371,9 @@ if __name__ == '__main__':
     
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--layer_list', required=True, nargs='+', type=int, default=[32, 64, 128])
-    parser.add_argument('--fclayer_list', required=True, nargs='+', type=int, default=[750, 1500, 2500])
-    parser.add_argument('--num_epochs', required=False, type=int, default=1)
+    parser.add_argument('--layer_list', required=False, nargs='+', type=int, default=[128, 128, 64])
+    parser.add_argument('--fclayer_list', required=False, nargs='+', type=int, default=[2000, 3500, 5000])
+    parser.add_argument('--num_epochs', required=False, type=int, default=10)
     parser.add_argument('--loss_func', required=False, type=int, default=0)
     args = parser.parse_args()
     
