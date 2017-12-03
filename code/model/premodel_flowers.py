@@ -385,10 +385,10 @@ if __name__ == '__main__':
     
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--layer_list', required=True, nargs='+', type=int, default=[128, 128, 64])
-    parser.add_argument('--fclayer_list', required=True, nargs='+', type=int, default=[2000, 3500, 5000])
-    parser.add_argument('--num_epochs', required=False, type=int, default=1)
-    parser.add_argument('--loss_func', required=False, type=int, default=1)
+    parser.add_argument('--layer_list', required=False, nargs='+', type=int, default=[128, 128, 64])
+    parser.add_argument('--fclayer_list', required=False, nargs='+', type=int, default=[2000, 3500, 5000])
+    parser.add_argument('--num_epochs', required=False, type=int, default=10)
+    parser.add_argument('--loss_func', required=False, type=int, default=0)
     args = parser.parse_args()
     
     main(layer_list=args.layer_list, fclayer_list=args.fclayer_list, num_epochs=args.num_epochs, loss_func=args.loss_func)
