@@ -181,7 +181,7 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
 # them to GPU at once for slightly improved performance. This would involve
 # several changes in the main program, though, and is not demonstrated here.
 
-def iterate_minibatches(inputs, text, targets, batchsize, shuffle=False):
+def iterate_minibatches(inputs, text, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
     if shuffle:
         indices = np.arange(len(inputs))
@@ -191,7 +191,7 @@ def iterate_minibatches(inputs, text, targets, batchsize, shuffle=False):
             excerpt = indices[start_idx:start_idx + batchsize]
         else:
             excerpt = slice(start_idx, start_idx + batchsize)
-        yield inputs[excerpt], text[excerpt], targets[excerpt]
+        yield inputs[excerpt], text[excerpt], 
 
 def scaleTrain(arr):
 
@@ -322,8 +322,8 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         train_err = 0
         train_batches = 0
         start_time = time.time()
-        for batch in iterate_minibatches(X_train, X_train_text, y_train, 128, shuffle=True):
-            inputs, text, targets = batch
+        for batch in iterate_minibatches(X_train, X_train_text, 128, shuffle=True):
+            inputs, text = batch
             noise = lasagne.utils.floatX(np.random.rand(len(inputs), 50))
             train_err += np.array(train_fn(noise, inputs, text))
             train_batches += 1
