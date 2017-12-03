@@ -20,7 +20,7 @@ from data_utils import *
 
 imageIdToNameDict = {}
 imageIdToCaptionVectorDict = {}
-X_train, X_train_caption, X_val, X_val_caption, X_test, X_test_caption = None, None, None, None, None, None
+X_train, X_train_text, X_val, X_val_text, X_test, X_test_text = None, None, None, None, None, None
 
 
 pixelSz = 32
@@ -31,48 +31,48 @@ def load_dataset(tanh_flag):
 
     #print test_img_raw
     
-    train_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
-    validate_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
-    test_caption = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
+    train_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
+    validate_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
+    test_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
 
-    train_sz = len(train_caption)
-    X_train_caption_lcl = np.zeros((train_sz, 1 , 300))
+    train_sz = len(train_text)
+    X_train_text_lcl = np.zeros((train_sz, 1 , 300))
     X_train_img_lcl = np.zeros((train_sz, 3 , pixelSz, pixelSz))
-    validate_sz = len(validate_caption)
-    X_val_caption_lcl = np.zeros((validate_sz, 1 , 300))
+    validate_sz = len(validate_text)
+    X_val_text_lcl = np.zeros((validate_sz, 1 , 300))
     X_val_img_lcl = np.zeros((validate_sz, 3 , pixelSz, pixelSz))
-    test_sz = len(test_caption)
-    X_test_caption_lcl = np.zeros((test_sz, 1 , 300))
+    test_sz = len(test_text)
+    X_test_text_lcl = np.zeros((test_sz, 1 , 300))
     X_test_img_lcl = np.zeros((test_sz, 3 , pixelSz, pixelSz))
     
     global_ctr = 0
     counter = 0
-    for key in train_caption:
+    for key in train_text:
         imageIdToNameDict[global_ctr] = key
-        imageIdToCaptionVectorDict[global_ctr] = train_caption[key]
-        X_train_caption_lcl[counter] = train_caption[key]
+        imageIdToCaptionVectorDict[global_ctr] = train_text[key]
+        X_train_text_lcl[counter] = train_text[key]
         X_train_img_lcl[counter] = train_img_raw[key]
         counter+=1
         global_ctr+=1
     counter = 0
-    for key in validate_caption:
+    for key in validate_text:
         imageIdToNameDict[global_ctr] = key
-        imageIdToCaptionVectorDict[global_ctr] = validate_caption[key]
-        X_val_caption_lcl[counter] = validate_caption[key]
+        imageIdToCaptionVectorDict[global_ctr] = validate_text[key]
+        X_val_text_lcl[counter] = validate_text[key]
         X_val_img_lcl[counter] = val_img_raw[key]
         counter+=1
         global_ctr+=1
     counter = 0
-    for key in test_caption:
+    for key in test_text:
         imageIdToNameDict[global_ctr] = key
-        imageIdToCaptionVectorDict[global_ctr] = test_caption[key]
-        X_test_caption_lcl[counter] = test_caption[key]
+        imageIdToCaptionVectorDict[global_ctr] = test_text[key]
+        X_test_text_lcl[counter] = test_text[key]
         X_test_img_lcl[counter] = test_img_raw[key]
         counter+=1
         global_ctr+=1
 
     
-    return X_train_img_lcl, X_train_caption_lcl, X_val_img_lcl, X_val_caption_lcl, X_test_img_lcl, X_test_caption_lcl
+    return X_train_img_lcl, X_train_text_lcl, X_val_img_lcl, X_val_text_lcl, X_test_img_lcl, X_test_text_lcl
 
 
 # ##################### Build the neural network model #######################
@@ -331,7 +331,7 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         print("  training loss:\t\t{}".format(train_err / train_batches))
 
         # And finally, we plot some generated data
-        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(X_test_caption.shape[0], 50)), X_test_caption))
+        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(X_test_text.shape[0], 50)), X_test_text))
         try:
             import matplotlib.pyplot as plt
         except ImportError:
