@@ -25,6 +25,8 @@ X_train, X_train_text, X_val, X_val_text, X_test, X_test_text = None, None, None
 
 pixelSz = 32
 
+vals = [1,100,182,227,394,395,469,470]
+trial = np.zeros((8,1,300))
 
 def load_dataset(tanh_flag):
     train_img_raw, val_img_raw, test_img_raw = imgtobin_flowers(tanh_flag)
@@ -63,6 +65,7 @@ def load_dataset(tanh_flag):
         counter+=1
         global_ctr+=1
     counter = 0
+    tr=0
     for key in test_text:
         imageIdToNameDict[global_ctr] = key
         imageIdToCaptionVectorDict[global_ctr] = test_text[key]
@@ -70,6 +73,9 @@ def load_dataset(tanh_flag):
         X_test_img_lcl[counter] = np.reshape(np.mean(test_img_raw[key],axis=0), (1,pixelSz, pixelSz))
         counter+=1
         global_ctr+=1
+        if counter in vals:
+            trial[tr] = np.copy(test_text[key])
+            tr+=1
 
     
     return X_train_img_lcl, X_train_text_lcl, X_val_img_lcl, X_val_text_lcl, X_test_img_lcl, X_test_text_lcl
@@ -333,7 +339,7 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         print("  training loss:\t\t{}".format(train_err / train_batches))
 
         # And finally, we plot some generated data
-        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(X_test_text[0:200].shape[0], 50)), X_test_text[0:200]))
+        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(8, 50)), trial))
         try:
             import matplotlib.pyplot as plt
         except ImportError:
