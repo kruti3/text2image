@@ -128,22 +128,18 @@ def build_generator(input_noise, input_text, layer_list, fclayer_list):
 
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
-    zeroth_hidden_layer = batch_norm(DenseLayer(input_gen, fclayer_list[0] , nonlinearity=lrelu))
-   
-    first_hidden_layer = batch_norm(DenseLayer(zeroth_hidden_layer, fclayer_list[1], nonlinearity=lrelu))
-   
-    second_hidden_layer = batch_norm(DenseLayer(first_hidden_layer, fclayer_list[2], nonlinearity=lrelu))
-   
-    third_hidden_layer = DenseLayer(second_hidden_layer, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
-    third_hidden_layer = ReshapeLayer(third_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
-
-    first_conv_layer = batch_norm(Deconv2DLayer(third_hidden_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
-    second_conv_layer = batch_norm(Deconv2DLayer(first_conv_layer, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
-    #third_conv_layer = batch_norm(Deconv2DLayer(second_conv_layer, layer_list[3], 5, stride=1, crop=2, nonlinearity=lrelu))
-    #fourth_conv_layer = batch_norm(Deconv2DLayer(third_conv_layer, layer_list[4], 5, stride=1, crop=2, nonlinearity=lrelu))
-    fifth_conv_layer = Deconv2DLayer(second_conv_layer, 3, 5, stride=1, pad=2, nonlinearity=sigmoid)
+    for i in range(len(fclayer_list)):
+        input_gen = batch_norm(DenseLayer(input_gen, fclayer_list[i] , nonlinearity=lrelu))
     
-    return fifth_conv_layer
+    interm_hidden_layer = DenseLayer(input_gen, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
+    ithconv_layer = ReshapeLayer(interm_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
+
+    for i in range(1, len(layer_list), 1):
+        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+    
+    ithconv_layer = Deconv2DLayer(ithconv_layer, 3, 5, stride=1, pad=2, nonlinearity=sigmoid)
+    
+    return ithconv_layer
 
 def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
@@ -152,23 +148,28 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     lrelu = LeakyRectify(0.2)
     # input: (None, 3, 28, 28)
 
-    input_dis = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
+    ithconv_layer = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
+    
+    for i in range(len(layer_list)-1, -1, -1):
+        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=lrelu))
+    
     #frst_conv_layer =  batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
     #second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
-    third_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
-    fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
-    fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
+    #third_conv_layer = batch_norm(Conv2DLayer(input_dis, layer_list[2], 5, stride=1, pad=2, nonlinearity=lrelu))
+    #fourth_conv_layer = batch_norm(Conv2DLayer(third_conv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+    #fifth_conv_layer = batch_norm(Conv2DLayer(fourth_conv_layer, layer_list[0], 5, stride=1, pad=2, nonlinearity=lrelu))
     #pooled_fifth_conv_layer = MaxPool2DLayer(fifth_conv_layer, pool_size=(2,2), stride=2)
-    conv_dis_output = ReshapeLayer(fifth_conv_layer, ([0], layer_list[0]*pixelSz*pixelSz))
+    conv_dis_output = ReshapeLayer(ithconv_layer, ([0], layer_list[0]*pixelSz*pixelSz))
 
     text_input_dis = InputLayer(shape = (None, 1, 300), input_var = input_text)
     text_input_dis = ReshapeLayer(text_input_dis, ([0], 1*300))
 
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
-    frst_hidden_layer = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=lrelu))
-    second_hidden_layer = batch_norm(DenseLayer(frst_hidden_layer, fclayer_list[1], nonlinearity=lrelu))
-    third_hidden_layer = batch_norm(DenseLayer(second_hidden_layer, fclayer_list[0], nonlinearity=lrelu))
-    final_output_dis = DenseLayer(third_hidden_layer, 1, nonlinearity = sigmoid)
+    
+    for i in range(len(fclayer_list)-1, -1, -1):
+        input_fc_dis = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=lrelu))
+    
+    final_output_dis = DenseLayer(input_fc_dis, 1, nonlinearity = sigmoid)
 
     return final_output_dis
 
@@ -182,7 +183,7 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
 # several changes in the main program, though, and is not demonstrated here.
 
 def iterate_minibatches(inputs, text, batchsize, shuffle=False):
-    assert len(inputs) == len(targets)
+    assert len(inputs) == len(text)
     if shuffle:
         indices = np.arange(len(inputs))
         np.random.shuffle(indices)
@@ -334,7 +335,7 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         print("  training loss:\t\t{}".format(train_err / train_batches))
 
         # And finally, we plot some generated data
-        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(X_test_caption.shape[0], 50)), X_test_caption))
+        samples = np.array(gen_fn(lasagne.utils.floatX(np.random.rand(X_test_text.shape[0], 50)), X_test_text))
         try:
             import matplotlib.pyplot as plt
         except ImportError:
@@ -387,7 +388,7 @@ if __name__ == '__main__':
     parser.add_argument('--layer_list', required=True, nargs='+', type=int, default=[32, 64, 128])
     parser.add_argument('--fclayer_list', required=True, nargs='+', type=int, default=[750, 1500, 2500])
     parser.add_argument('--num_epochs', required=False, type=int, default=1)
-    parser.add_argument('--loss_func', required=False, type=int, default=1)
+    parser.add_argument('--loss_func', required=False, type=int, default=0)
     args = parser.parse_args()
     
     main(layer_list=args.layer_list, fclayer_list=args.fclayer_list, num_epochs=args.num_epochs, loss_func=args.loss_func)
