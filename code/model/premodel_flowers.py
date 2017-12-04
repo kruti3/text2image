@@ -279,7 +279,7 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
     real_out = lasagne.layers.get_output(discriminator)
     # Create expression for passing fake data through the discriminator
     fake_out = lasagne.layers.get_output(discriminator,
-            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[11]: input_text})
+            {all_layers[0]: lasagne.layers.get_output(generator), all_layers[2+3*len(layer_list)]: input_text})
 
     # Create loss expressions
     generator_loss = None
