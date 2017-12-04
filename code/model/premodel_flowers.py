@@ -31,9 +31,32 @@ def load_dataset(tanh_flag):
 
     #print test_img_raw
     
-    train_text = np.load('/home/kruti/text2image/data/flowers/system_input_train.npy').item()
-    validate_text = np.load('/home/kruti/text2image/data/flowers/system_input_validate.npy').item()
-    test_text = np.load('/home/kruti/text2image/data/flowers/system_input_test.npy').item()
+    train_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_train.npy').item()
+    validate_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_validate.npy').item()
+    test_text = np.load('/home/utkarsh1404/project/text2image/data/flowers/system_input_test.npy').item()
+
+    '''
+    train_text_prune = {}
+    validate_text_prune = {}
+    test_text_prune = {}
+
+    for key in train_text:
+        if 'petunia' in key or 'hibiscus' in key:
+            train_text_prune[key] = train_text[key]
+    for key in validate_text:
+        if 'petunia' in key or 'hibiscus' in key:
+            validate_text_prune[key] = validate_text[key]
+    for key in test_text:
+        if 'petunia' in key or 'hibiscus' in key:
+            test_text_prune[key] = test_text[key]
+
+    print len(train_text)
+    train_text = train_text_prune
+    validate_text = validate_text_prune
+    test_text = test_text_prune
+    print len(train_text)
+    
+    '''
 
     train_sz = len(train_text)
     X_train_text_lcl = np.zeros((train_sz, 1 , 300))
@@ -135,7 +158,7 @@ def build_generator(input_noise, input_text, layer_list, fclayer_list):
     ithconv_layer = ReshapeLayer(interm_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
 
     for i in range(1, len(layer_list), 1):
-        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=rectify))
+        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=rectify))
     
     ithconv_layer = Deconv2DLayer(ithconv_layer, 3, 5, stride=1, pad=2, nonlinearity=sigmoid)
     
@@ -151,7 +174,7 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     ithconv_layer = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
     
     for i in range(len(layer_list)-1, -1, -1):
-        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=rectify))
+        ithconv_layer = batch_norm(Conv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=rectify))
     
     #frst_conv_layer =  batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
     #second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
@@ -167,7 +190,7 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
     
     for i in range(len(fclayer_list)-1, -1, -1):
-        input_fc_dis = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=rectify))
+        input_fc_dis = batch_norm(DenseLayer(input_fc_dis, fclayer_list[i], nonlinearity=rectify))
     
     final_output_dis = DenseLayer(input_fc_dis, 1, nonlinearity = sigmoid)
 
@@ -196,13 +219,13 @@ def iterate_minibatches(inputs, text, batchsize, shuffle=False):
 
 def scaleTrain(arr):
     sz = 0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                     sz+=1
     dummy_arr = np.zeros((sz, pixelSz, pixelSz, 3))
     ct=0
-    for dirname, dirnames, filenames in os.walk('/home/kruti/text2image/data/flowers/flowerSamplesResized/train'):
+    for dirname, dirnames, filenames in os.walk('/home/utkarsh1404/project/text2image/data/flowers/flowerSamplesResized/train'):
         for filename in filenames:
             if filename.endswith('.jpg'):
                 pix = Image.open(os.path.join(dirname, filename))
@@ -247,7 +270,7 @@ def scaleActualRangeChanged(arr):
     return arr
 
 def scaleRange(arr):
-    arr = (arr)*255
+    arr = (arr)*255.0
     return arr
 # ############################## Main program ################################
 # Everything else will be handled in our main program now. We could pull out
@@ -256,7 +279,7 @@ def scaleRange(arr):
 
 def main(layer_list, fclayer_list, num_epochs, loss_func):
     # Load the dataset
-    initial_eta=2e-4
+    initial_eta=1e-4
     print("Loading data...")
     X_train, X_train_text, X_val, X_val_text, X_test, X_test_text = load_dataset(1)
 
@@ -297,9 +320,9 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
     discriminator_params = lasagne.layers.get_all_params(discriminator, trainable=True)
     eta = theano.shared(lasagne.utils.floatX(initial_eta))
     updates = lasagne.updates.adam(
-            generator_loss, generator_params, learning_rate=eta, beta1=0.5)
+            generator_loss, generator_params, learning_rate=eta, beta1=0.9)
     updates.update(lasagne.updates.adam(
-            discriminator_loss, discriminator_params, learning_rate=eta, beta1=0.5))
+            discriminator_loss, discriminator_params, learning_rate=eta, beta1=0.9))
 
     # Compile a function performing a training step on a mini-batch (by giving
     # the updates dictionary) and returning the corresponding training loss:
@@ -321,7 +344,7 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         train_err = 0
         train_batches = 0
         start_time = time.time()
-        for batch in iterate_minibatches(X_train, X_train_text, 128, shuffle=True):
+        for batch in iterate_minibatches(X_train, X_train_text, 125, shuffle=True):
             inputs, text = batch
             noise = lasagne.utils.floatX(np.random.rand(len(inputs), 50))
             train_err += np.array(train_fn(noise, inputs, text))
@@ -349,23 +372,23 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
                 
                 arr0 = np.copy(arr)
                 im = Image.fromarray(np.uint8(arr0))
-                im.save("/home/kruti/text2image/data/flowers/run3/0/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/0/"+str(epoch)+imageIdToNameDict[offset+x])
                 
                 arr1 = np.asarray(scaleTrain(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr1))
-                im.save("/home/kruti/text2image/data/flowers/run3/1/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/1/"+str(epoch)+imageIdToNameDict[offset+x])
                 
                 arr2 = np.asarray(scaleRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr2))
-                im.save("/home/kruti/text2image/data/flowers/run3/2/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/2/"+str(epoch)+imageIdToNameDict[offset+x])
                 
                 arr3 = np.asarray(scaleActualRange(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr3))
-                im.save("/home/kruti/text2image/data/flowers/run3/3/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/3/"+str(epoch)+imageIdToNameDict[offset+x])
                
                 arr4 = np.asarray(scaleActualRangeChanged(np.copy(arr)))
                 im = Image.fromarray(np.uint8(arr4))
-                im.save("/home/kruti/text2image/data/flowers/run3/4/"+str(epoch)+imageIdToNameDict[offset+x])
+                im.save("/home/utkarsh1404/project/text2image/data/flowers/run3/4/"+str(epoch)+imageIdToNameDict[offset+x])
                 
 
         # After half the epochs, we start decaying the learn rate towards zero
