@@ -120,7 +120,7 @@ def build_generator(input_noise, input_text, layer_list, fclayer_list):
     from lasagne.layers import InputLayer, ReshapeLayer, DenseLayer, batch_norm, ConcatLayer
     from lasagne.nonlinearities import sigmoid, LeakyRectify
     
-    lrelu = LeakyRectify(0.1)
+    #lrelu = LeakyRectify(0.1)
 
     input_gen_noise = InputLayer(shape=(None, 50), input_var=input_noise)
     input_gen_text = InputLayer(shape=(None, 1, 300), input_var=input_text)
@@ -129,13 +129,13 @@ def build_generator(input_noise, input_text, layer_list, fclayer_list):
     input_gen = ConcatLayer([input_gen_noise,  input_gen_text], axis=1)
     
     for i in range(len(fclayer_list)):
-        input_gen = batch_norm(DenseLayer(input_gen, fclayer_list[i] , nonlinearity=lrelu))
+        input_gen = batch_norm(DenseLayer(input_gen, fclayer_list[i] , nonlinearity=rectify))
     
-    interm_hidden_layer = DenseLayer(input_gen, layer_list[0]*pixelSz*pixelSz, nonlinearity=lrelu)
+    interm_hidden_layer = DenseLayer(input_gen, layer_list[0]*pixelSz*pixelSz, nonlinearity=rectify)
     ithconv_layer = ReshapeLayer(interm_hidden_layer, ([0], layer_list[0], pixelSz, pixelSz))
 
     for i in range(1, len(layer_list), 1):
-        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=lrelu))
+        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[1], 5, stride=1, pad=2, nonlinearity=rectify))
     
     ithconv_layer = Deconv2DLayer(ithconv_layer, 3, 5, stride=1, pad=2, nonlinearity=sigmoid)
     
@@ -145,13 +145,13 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
                                 DenseLayer, batch_norm, ConcatLayer)
     from lasagne.nonlinearities import LeakyRectify, sigmoid
-    lrelu = LeakyRectify(0.2)
+    #lrelu = LeakyRectify(0.2)
     # input: (None, 3, 28, 28)
 
     ithconv_layer = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
     
     for i in range(len(layer_list)-1, -1, -1):
-        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=lrelu))
+        ithconv_layer = batch_norm(Deconv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=rectify))
     
     #frst_conv_layer =  batch_norm(Conv2DLayer(input_dis, layer_list[4], 5, stride=1, pad=2, nonlinearity=lrelu))
     #second_conv_layer = batch_norm(Conv2DLayer(frst_conv_layer, layer_list[3], 5, stride=1, pad=2, nonlinearity=lrelu))
@@ -167,7 +167,7 @@ def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     input_fc_dis = ConcatLayer([conv_dis_output, text_input_dis], axis=1)
     
     for i in range(len(fclayer_list)-1, -1, -1):
-        input_fc_dis = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=lrelu))
+        input_fc_dis = batch_norm(DenseLayer(input_fc_dis, fclayer_list[2], nonlinearity=rectify))
     
     final_output_dis = DenseLayer(input_fc_dis, 1, nonlinearity = sigmoid)
 
