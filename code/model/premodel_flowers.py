@@ -118,7 +118,7 @@ class Deconv2DLayer(lasagne.layers.Layer):
 
 def build_generator(input_noise, input_text, layer_list, fclayer_list):
     from lasagne.layers import InputLayer, ReshapeLayer, DenseLayer, batch_norm, ConcatLayer
-    from lasagne.nonlinearities import sigmoid, LeakyRectify
+    from lasagne.nonlinearities import sigmoid, rectify
     
     #lrelu = LeakyRectify(0.1)
 
@@ -144,7 +144,7 @@ def build_generator(input_noise, input_text, layer_list, fclayer_list):
 def build_discriminator(input_img, input_text, layer_list, fclayer_list):
     from lasagne.layers import (InputLayer, Conv2DLayer, ReshapeLayer,
                                 DenseLayer, batch_norm, ConcatLayer)
-    from lasagne.nonlinearities import LeakyRectify, sigmoid
+    from lasagne.nonlinearities import rectify, sigmoid
     #lrelu = LeakyRectify(0.2)
     # input: (None, 3, 28, 28)
 
