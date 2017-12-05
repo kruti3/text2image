@@ -69,8 +69,8 @@ for file in files:
 import numpy as np
 import Image
 
-width = 32
-height = 32
+width = 64
+height = 64
 files = glob.iglob(os.path.join("/home/utkarsh1404/Documents/CS682/Project/dataset/flowers/flowerSamples/train/", "*.jpg"))
 for file in files:
     fileName = file.split("/")[10]
