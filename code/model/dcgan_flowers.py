@@ -167,7 +167,7 @@ def build_discriminator(input_img, input_text, layer_list):
     
     ithconv_layer = InputLayer(shape = (None, 3, pixelSz, pixelSz), input_var = input_img)
     
-    ithconv_layer = Conv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=rectify)
+    ithconv_layer = Conv2DLayer(ithconv_layer, layer_list[-1], 5, stride=1, pad=2, nonlinearity=rectify)
     
     for i in range(len(layer_list)-2, -1, -1):
         ithconv_layer = batch_norm(Conv2DLayer(ithconv_layer, layer_list[i], 5, stride=1, pad=2, nonlinearity=rectify))
