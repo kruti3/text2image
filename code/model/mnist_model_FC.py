@@ -17,7 +17,7 @@ import lasagne
 # and loading it into numpy arrays. It doesn't involve Lasagne at all.
 
 
-word2vec = np.load('/home/kruti/text2image/data/digits/word2vec_digits.npy').item()
+word2vec = np.load('/home/utkarsh1404/project/text2image/data/digits/word2vec_digits.npy').item()
 
 samples_text = np.zeros((50,1,300))
 for i in range(50):

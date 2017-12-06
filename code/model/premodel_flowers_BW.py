@@ -345,7 +345,7 @@ def main(layer_list, fclayer_list, num_epochs, loss_func):
         except ImportError:
             pass
         else:
-            plt.imsave('flower_samples.png',
+            plt.imsave('flower_samples_'+str(epoch)+'.png',
                        (samples.reshape(4, 2, 32, 32)
                                .transpose(0, 2, 1, 3)
                                .reshape(4*32, 2*32)),

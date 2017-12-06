@@ -83,7 +83,7 @@ def imgtobin_dogs(tanh_flag):
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
                     pix = np.array(pix, dtype=np.float)
-                    pix = (pix)/(255.0)
+                    pix = (pix)/(256.0)
                     #print(os.path.join(dirname, filename))
 
                     w, h, c = pix.shape 
@@ -96,7 +96,7 @@ def imgtobin_dogs(tanh_flag):
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
                     pix = np.array(pix, dtype=np.float)
-                    pix = (pix)/(255.0)
+                    pix = (pix)/(256.0)
                     #print(os.path.join(dirname, filename))
 
                     w, h, c = pix.shape 
@@ -109,7 +109,7 @@ def imgtobin_dogs(tanh_flag):
                 if filename.endswith('.jpg'):
                     pix = Image.open(os.path.join(dirname, filename))
                     pix = np.array(pix, dtype=np.float)
-                    pix = (pix)/(255.0)
+                    pix = (pix)/(256.0)
                     #print(os.path.join(dirname, filename))
 
                     w, h, c = pix.shape 
